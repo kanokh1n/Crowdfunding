@@ -1,6 +1,6 @@
 # Crowdfunding Platform
 
-REST API на Go + фронтенд (отдельный разработчик).
+REST API на Go + фронтенд.
 
 ---
 
