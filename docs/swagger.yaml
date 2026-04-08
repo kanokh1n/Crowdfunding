@@ -1,0 +1,1265 @@
+openapi: 3.0.3
+info:
+  title: Crowdfunding Platform API
+  description: |
+    REST API for the Crowdfunding Platform.
+
+    ## Authentication
+    Most endpoints require a Bearer JWT token in the `Authorization` header:
+    ```
+    Authorization: Bearer <access_token>
+    ```
+    Obtain tokens via `POST /api/auth/login`.
+    Access tokens expire in **15 minutes**. Use `POST /api/auth/refresh` with the refresh token to get a new one.
+
+    ## Pagination
+    Paginated endpoints accept `page` (default: 1) and `limit` (default: 10, max: 100) query params.
+    Response format:
+    ```json
+    { "data": [...], "total": 100, "page": 1, "limit": 10 }
+    ```
+  version: 1.0.0
+
+servers:
+  - url: http://localhost:8080
+    description: Local development
+
+tags:
+  - name: Auth
+    description: Registration, login, email verification
+  - name: Users
+    description: User profiles
+  - name: Projects
+    description: Crowdfunding projects
+  - name: Categories
+    description: Project categories
+  - name: Pledges
+    description: Donations to projects
+  - name: Comments
+    description: Project comments
+  - name: Likes
+    description: Project likes
+  - name: Messages
+    description: Direct messages between users
+  - name: Admin
+    description: Admin-only operations (requires role=admin)
+  - name: Moderation
+    description: Two-stage project moderation (AI → Human). Requires role=admin.
+
+# ─── Security ────────────────────────────────────────────────────────────────
+
+components:
+  securitySchemes:
+    BearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+
+  schemas:
+    # ── Common ──────────────────────────────────────────────────────────────
+    PaginatedMeta:
+      type: object
+      properties:
+        total:
+          type: integer
+          example: 42
+        page:
+          type: integer
+          example: 1
+        limit:
+          type: integer
+          example: 10
+
+    Error:
+      type: object
+      properties:
+        error:
+          type: string
+          example: "record not found"
+
+    # ── User ────────────────────────────────────────────────────────────────
+    User:
+      type: object
+      properties:
+        id:
+          type: integer
+          example: 1
+        email:
+          type: string
+          format: email
+          example: user@example.com
+        fio:
+          type: string
+          example: Иванов Иван Иванович
+        description:
+          type: string
+          example: Fullstack developer
+        profile_img:
+          type: string
+          example: https://example.com/avatar.jpg
+        phone:
+          type: string
+          example: "+79001234567"
+        role:
+          type: string
+          enum: [user, admin]
+          example: user
+        is_verified:
+          type: boolean
+          example: true
+        created_at:
+          type: string
+          format: date-time
+        updated_at:
+          type: string
+          format: date-time
+
+    # ── Category ────────────────────────────────────────────────────────────
+    Category:
+      type: object
+      properties:
+        id:
+          type: integer
+          example: 3
+        title:
+          type: string
+          example: Технологии
+
+    # ── Moderation ──────────────────────────────────────────────────────────
+    ProjectModeration:
+      type: object
+      properties:
+        id:
+          type: integer
+        project_id:
+          type: integer
+        ai_status:
+          type: string
+          enum: [pending, passed, failed]
+        ai_score:
+          type: number
+          format: float
+          description: 0.0 (bad) – 1.0 (clean)
+          example: 0.87
+        ai_flags:
+          type: string
+          description: JSON array of detected issue labels
+          example: '["spam","gambling"]'
+        ai_checked_at:
+          type: string
+          format: date-time
+          nullable: true
+        human_status:
+          type: string
+          enum: [pending, approved, rejected]
+        moderator_id:
+          type: integer
+          nullable: true
+        moderator_note:
+          type: string
+          example: Проект содержит рекламу
+        human_moderated_at:
+          type: string
+          format: date-time
+          nullable: true
+
+    # ── Project ─────────────────────────────────────────────────────────────
+    Project:
+      type: object
+      properties:
+        id:
+          type: integer
+          example: 10
+        user_id:
+          type: integer
+          example: 1
+        user:
+          $ref: '#/components/schemas/User'
+        title:
+          type: string
+          example: Умная теплица
+        description:
+          type: string
+          example: Проект автоматической теплицы на Arduino
+        goal_amount:
+          type: number
+          format: float
+          example: 500000.00
+        current_amount:
+          type: number
+          format: float
+          example: 123000.50
+        project_img:
+          type: string
+          example: https://example.com/project.jpg
+        status:
+          type: string
+          enum: [pending_ai, rejected_ai, pending_human, active, rejected, completed, cancelled]
+          example: active
+        end_date:
+          type: string
+          format: date-time
+          nullable: true
+          example: "2026-12-31T23:59:59Z"
+        likes_count:
+          type: integer
+          example: 47
+        categories:
+          type: array
+          items:
+            $ref: '#/components/schemas/Category'
+        created_at:
+          type: string
+          format: date-time
+        updated_at:
+          type: string
+          format: date-time
+
+    # ── Pledge ──────────────────────────────────────────────────────────────
+    Pledge:
+      type: object
+      properties:
+        id:
+          type: integer
+          example: 5
+        user_id:
+          type: integer
+          example: 2
+        user:
+          $ref: '#/components/schemas/User'
+        project_id:
+          type: integer
+          example: 10
+        amount:
+          type: number
+          format: float
+          example: 5000.00
+        created_at:
+          type: string
+          format: date-time
+
+    # ── Comment ─────────────────────────────────────────────────────────────
+    Comment:
+      type: object
+      properties:
+        id:
+          type: integer
+          example: 7
+        user_id:
+          type: integer
+          example: 3
+        user:
+          $ref: '#/components/schemas/User'
+        project_id:
+          type: integer
+          example: 10
+        content:
+          type: string
+          example: Отличная идея!
+        created_at:
+          type: string
+          format: date-time
+
+    # ── Message ─────────────────────────────────────────────────────────────
+    Message:
+      type: object
+      properties:
+        id:
+          type: integer
+          example: 1
+        sender_id:
+          type: integer
+          example: 2
+        sender:
+          $ref: '#/components/schemas/User'
+        recipient_id:
+          type: integer
+          example: 1
+        recipient:
+          $ref: '#/components/schemas/User'
+        project_id:
+          type: integer
+          example: 10
+        project:
+          $ref: '#/components/schemas/Project'
+        title:
+          type: string
+          example: Вопрос по проекту
+        content:
+          type: string
+          example: Когда планируется выпуск?
+        is_read:
+          type: boolean
+          example: false
+        created_at:
+          type: string
+          format: date-time
+
+# ─── Paths ───────────────────────────────────────────────────────────────────
+
+paths:
+
+  # ═══════════════════════════════════════════════════
+  # AUTH
+  # ═══════════════════════════════════════════════════
+
+  /api/auth/register:
+    post:
+      tags: [Auth]
+      summary: Register a new user
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [email, password, fio]
+              properties:
+                email:
+                  type: string
+                  format: email
+                  example: user@example.com
+                password:
+                  type: string
+                  minLength: 6
+                  example: secret123
+                fio:
+                  type: string
+                  example: Иванов Иван Иванович
+      responses:
+        '201':
+          description: User created. Verification link is logged (in prod — sent to email).
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                  user:
+                    $ref: '#/components/schemas/User'
+        '400':
+          description: Validation error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '409':
+          description: Email already in use
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /api/auth/login:
+    post:
+      tags: [Auth]
+      summary: Login and get tokens
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [email, password]
+              properties:
+                email:
+                  type: string
+                  format: email
+                  example: user@example.com
+                password:
+                  type: string
+                  example: secret123
+      responses:
+        '200':
+          description: Login successful
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  access_token:
+                    type: string
+                    description: JWT, expires in 15 minutes
+                  refresh_token:
+                    type: string
+                    description: UUID, expires in 7 days
+                  user:
+                    $ref: '#/components/schemas/User'
+        '401':
+          description: Invalid credentials
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /api/auth/verify-email:
+    post:
+      tags: [Auth]
+      summary: Verify email by token
+      description: Pass the token received in the verification email as a query parameter.
+      parameters:
+        - in: query
+          name: token
+          required: true
+          schema:
+            type: string
+          example: a3f8b2c1...
+      responses:
+        '200':
+          description: Email verified
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+        '400':
+          description: Invalid or expired token
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /api/auth/refresh:
+    post:
+      tags: [Auth]
+      summary: Refresh access token
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [refresh_token]
+              properties:
+                refresh_token:
+                  type: string
+                  example: "550e8400-e29b-41d4-a716-446655440000"
+      responses:
+        '200':
+          description: New access token
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  access_token:
+                    type: string
+        '401':
+          description: Invalid or expired refresh token
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  # ═══════════════════════════════════════════════════
+  # USERS
+  # ═══════════════════════════════════════════════════
+
+  /api/users/me:
+    get:
+      tags: [Users]
+      summary: Get current user profile
+      security:
+        - BearerAuth: []
+      responses:
+        '200':
+          description: Current user
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/User'
+        '401':
+          description: Unauthorized
+
+    patch:
+      tags: [Users]
+      summary: Update current user profile
+      security:
+        - BearerAuth: []
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                fio:
+                  type: string
+                  example: Иванов Иван Иванович
+                description:
+                  type: string
+                phone:
+                  type: string
+                  example: "+79001234567"
+                profile_img:
+                  type: string
+                  example: https://example.com/avatar.jpg
+                password:
+                  type: string
+                  minLength: 6
+                  description: Leave empty to keep current password
+      responses:
+        '200':
+          description: Updated user
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/User'
+        '400':
+          description: Validation error
+
+  /api/users/me/projects:
+    get:
+      tags: [Users]
+      summary: Get projects of current user
+      security:
+        - BearerAuth: []
+      parameters:
+        - { in: query, name: page, schema: { type: integer, default: 1 } }
+        - { in: query, name: limit, schema: { type: integer, default: 10 } }
+      responses:
+        '200':
+          description: Paginated list of user's projects
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/PaginatedMeta'
+                  - type: object
+                    properties:
+                      data:
+                        type: array
+                        items:
+                          $ref: '#/components/schemas/Project'
+
+  /api/users/{id}:
+    get:
+      tags: [Users]
+      summary: Get public user profile
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: User profile
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/User'
+        '404':
+          description: User not found
+
+  # ═══════════════════════════════════════════════════
+  # PROJECTS
+  # ═══════════════════════════════════════════════════
+
+  /api/projects:
+    get:
+      tags: [Projects]
+      summary: List projects
+      description: Public. Supports filtering, search and sorting.
+      parameters:
+        - { in: query, name: page, schema: { type: integer, default: 1 } }
+        - { in: query, name: limit, schema: { type: integer, default: 10 } }
+        - in: query
+          name: category_id
+          schema:
+            type: integer
+          description: Filter by category
+        - in: query
+          name: search
+          schema:
+            type: string
+          description: Search in project title (case-insensitive)
+        - in: query
+          name: status
+          schema:
+            type: string
+            enum: [active, pending, completed, cancelled]
+        - in: query
+          name: sort
+          schema:
+            type: string
+            enum: [created_at, current_amount, likes_count]
+            default: created_at
+          description: Sort order (always descending)
+      responses:
+        '200':
+          description: Paginated list of projects
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/PaginatedMeta'
+                  - type: object
+                    properties:
+                      data:
+                        type: array
+                        items:
+                          $ref: '#/components/schemas/Project'
+
+    post:
+      tags: [Projects]
+      summary: Create a new project
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [title, goal_amount]
+              properties:
+                title:
+                  type: string
+                  example: Умная теплица
+                description:
+                  type: string
+                  example: Описание проекта
+                goal_amount:
+                  type: number
+                  format: float
+                  example: 500000.00
+                end_date:
+                  type: string
+                  format: date-time
+                  nullable: true
+                  example: "2026-12-31T23:59:59Z"
+                project_img:
+                  type: string
+                  example: https://example.com/img.jpg
+                category_ids:
+                  type: array
+                  items:
+                    type: integer
+                  example: [1, 3]
+      responses:
+        '201':
+          description: Created project
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Project'
+        '400':
+          description: Validation error
+
+  /api/projects/{id}:
+    get:
+      tags: [Projects]
+      summary: Get project by ID
+      parameters:
+        - { in: path, name: id, required: true, schema: { type: integer } }
+      responses:
+        '200':
+          description: Project details
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Project'
+        '404':
+          description: Project not found
+
+    patch:
+      tags: [Projects]
+      summary: Update project (owner or admin)
+      security:
+        - BearerAuth: []
+      parameters:
+        - { in: path, name: id, required: true, schema: { type: integer } }
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                title:
+                  type: string
+                description:
+                  type: string
+                goal_amount:
+                  type: number
+                end_date:
+                  type: string
+                  format: date-time
+                  nullable: true
+                project_img:
+                  type: string
+                status:
+                  type: string
+                  enum: [active, pending, completed, cancelled]
+                category_ids:
+                  type: array
+                  items:
+                    type: integer
+      responses:
+        '200':
+          description: Updated project
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Project'
+        '403':
+          description: Forbidden (not owner or admin)
+        '404':
+          description: Not found
+
+    delete:
+      tags: [Projects]
+      summary: Soft-delete project (owner or admin)
+      security:
+        - BearerAuth: []
+      parameters:
+        - { in: path, name: id, required: true, schema: { type: integer } }
+      responses:
+        '204':
+          description: Deleted
+        '403':
+          description: Forbidden
+        '404':
+          description: Not found
+
+  # ═══════════════════════════════════════════════════
+  # CATEGORIES
+  # ═══════════════════════════════════════════════════
+
+  /api/categories:
+    get:
+      tags: [Categories]
+      summary: List all categories
+      responses:
+        '200':
+          description: Array of categories
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Category'
+
+  # ═══════════════════════════════════════════════════
+  # PLEDGES
+  # ═══════════════════════════════════════════════════
+
+  /api/projects/{id}/pledges:
+    get:
+      tags: [Pledges]
+      summary: List pledges for a project
+      security:
+        - BearerAuth: []
+      parameters:
+        - { in: path, name: id, required: true, schema: { type: integer } }
+        - { in: query, name: page, schema: { type: integer, default: 1 } }
+        - { in: query, name: limit, schema: { type: integer, default: 10 } }
+      responses:
+        '200':
+          description: Paginated pledges
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/PaginatedMeta'
+                  - type: object
+                    properties:
+                      data:
+                        type: array
+                        items:
+                          $ref: '#/components/schemas/Pledge'
+
+    post:
+      tags: [Pledges]
+      summary: Pledge to a project
+      description: Atomically creates pledge and increments project's `current_amount`.
+      security:
+        - BearerAuth: []
+      parameters:
+        - { in: path, name: id, required: true, schema: { type: integer } }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [amount]
+              properties:
+                amount:
+                  type: number
+                  format: float
+                  example: 5000.00
+      responses:
+        '201':
+          description: Pledge created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Pledge'
+        '400':
+          description: Project not accepting pledges (not active)
+        '404':
+          description: Project not found
+
+  # ═══════════════════════════════════════════════════
+  # COMMENTS
+  # ═══════════════════════════════════════════════════
+
+  /api/projects/{id}/comments:
+    get:
+      tags: [Comments]
+      summary: List comments for a project
+      parameters:
+        - { in: path, name: id, required: true, schema: { type: integer } }
+        - { in: query, name: page, schema: { type: integer, default: 1 } }
+        - { in: query, name: limit, schema: { type: integer, default: 10 } }
+      responses:
+        '200':
+          description: Paginated comments
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/PaginatedMeta'
+                  - type: object
+                    properties:
+                      data:
+                        type: array
+                        items:
+                          $ref: '#/components/schemas/Comment'
+
+    post:
+      tags: [Comments]
+      summary: Add a comment
+      security:
+        - BearerAuth: []
+      parameters:
+        - { in: path, name: id, required: true, schema: { type: integer } }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [content]
+              properties:
+                content:
+                  type: string
+                  maxLength: 1500
+                  example: Отличная идея, поддерживаю!
+      responses:
+        '201':
+          description: Comment created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Comment'
+        '404':
+          description: Project not found
+
+  /api/comments/{id}:
+    delete:
+      tags: [Comments]
+      summary: Delete comment (owner or admin)
+      security:
+        - BearerAuth: []
+      parameters:
+        - { in: path, name: id, required: true, schema: { type: integer } }
+      responses:
+        '204':
+          description: Deleted
+        '403':
+          description: Forbidden
+        '404':
+          description: Not found
+
+  # ═══════════════════════════════════════════════════
+  # LIKES
+  # ═══════════════════════════════════════════════════
+
+  /api/projects/{id}/like:
+    post:
+      tags: [Likes]
+      summary: Like a project
+      security:
+        - BearerAuth: []
+      parameters:
+        - { in: path, name: id, required: true, schema: { type: integer } }
+      responses:
+        '200':
+          description: Liked
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  likes_count:
+                    type: integer
+                    example: 48
+        '409':
+          description: Already liked
+
+    delete:
+      tags: [Likes]
+      summary: Unlike a project
+      security:
+        - BearerAuth: []
+      parameters:
+        - { in: path, name: id, required: true, schema: { type: integer } }
+      responses:
+        '200':
+          description: Unliked
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  likes_count:
+                    type: integer
+                    example: 47
+        '404':
+          description: Like not found
+
+  # ═══════════════════════════════════════════════════
+  # MESSAGES
+  # ═══════════════════════════════════════════════════
+
+  /api/messages:
+    get:
+      tags: [Messages]
+      summary: Get inbox/outbox messages for current user
+      security:
+        - BearerAuth: []
+      parameters:
+        - { in: query, name: page, schema: { type: integer, default: 1 } }
+        - { in: query, name: limit, schema: { type: integer, default: 10 } }
+      responses:
+        '200':
+          description: Paginated messages
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/PaginatedMeta'
+                  - type: object
+                    properties:
+                      data:
+                        type: array
+                        items:
+                          $ref: '#/components/schemas/Message'
+
+    post:
+      tags: [Messages]
+      summary: Send a message to a project owner
+      description: Recipient is automatically set to the project's author. Cannot message yourself.
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [project_id, title, content]
+              properties:
+                project_id:
+                  type: integer
+                  example: 10
+                title:
+                  type: string
+                  example: Вопрос по проекту
+                content:
+                  type: string
+                  example: Когда планируется выпуск первой версии?
+      responses:
+        '201':
+          description: Message sent
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Message'
+        '400':
+          description: Cannot send to yourself / project not found
+
+  /api/messages/{id}/read:
+    patch:
+      tags: [Messages]
+      summary: Mark message as read
+      description: Only the recipient can mark the message as read.
+      security:
+        - BearerAuth: []
+      parameters:
+        - { in: path, name: id, required: true, schema: { type: integer } }
+      responses:
+        '200':
+          description: Marked as read
+        '403':
+          description: Forbidden (not the recipient)
+        '404':
+          description: Message not found
+
+  # ═══════════════════════════════════════════════════
+  # ADMIN
+  # ═══════════════════════════════════════════════════
+
+  /api/admin/users:
+    get:
+      tags: [Admin]
+      summary: List all users
+      security:
+        - BearerAuth: []
+      parameters:
+        - { in: query, name: page, schema: { type: integer, default: 1 } }
+        - { in: query, name: limit, schema: { type: integer, default: 10 } }
+      responses:
+        '200':
+          description: Paginated users
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/PaginatedMeta'
+                  - type: object
+                    properties:
+                      data:
+                        type: array
+                        items:
+                          $ref: '#/components/schemas/User'
+        '403':
+          description: Admin access required
+
+  /api/admin/users/{id}:
+    patch:
+      tags: [Admin]
+      summary: Update user role or verification status
+      security:
+        - BearerAuth: []
+      parameters:
+        - { in: path, name: id, required: true, schema: { type: integer } }
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                role:
+                  type: string
+                  enum: [user, admin]
+                is_verified:
+                  type: boolean
+      responses:
+        '200':
+          description: Updated user
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/User'
+        '404':
+          description: User not found
+
+  /api/admin/projects:
+    get:
+      tags: [Admin]
+      summary: List all projects including soft-deleted
+      security:
+        - BearerAuth: []
+      parameters:
+        - { in: query, name: page, schema: { type: integer, default: 1 } }
+        - { in: query, name: limit, schema: { type: integer, default: 10 } }
+        - in: query
+          name: status
+          schema:
+            type: string
+            enum: [active, pending, completed, cancelled]
+      responses:
+        '200':
+          description: Paginated projects
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/PaginatedMeta'
+                  - type: object
+                    properties:
+                      data:
+                        type: array
+                        items:
+                          $ref: '#/components/schemas/Project'
+
+  /api/admin/projects/{id}:
+    patch:
+      tags: [Admin]
+      summary: Change project status
+      security:
+        - BearerAuth: []
+      parameters:
+        - { in: path, name: id, required: true, schema: { type: integer } }
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                status:
+                  type: string
+                  enum: [active, pending, completed, cancelled]
+      responses:
+        '200':
+          description: Updated project
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Project'
+
+    delete:
+      tags: [Admin]
+      summary: Hard-delete project (permanent)
+      security:
+        - BearerAuth: []
+      parameters:
+        - { in: path, name: id, required: true, schema: { type: integer } }
+      responses:
+        '204':
+          description: Deleted
+        '404':
+          description: Not found
+
+  /api/admin/categories:
+    post:
+      tags: [Admin]
+      summary: Create a category
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [title]
+              properties:
+                title:
+                  type: string
+                  example: Технологии
+      responses:
+        '201':
+          description: Created category
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Category'
+        '409':
+          description: Category already exists
+
+  # ═══════════════════════════════════════════════════
+  # MODERATION
+  # ═══════════════════════════════════════════════════
+
+  /api/admin/moderation:
+    get:
+      tags: [Moderation]
+      summary: List projects awaiting human review
+      description: Returns projects with status=pending_human, oldest first.
+      security:
+        - BearerAuth: []
+      parameters:
+        - { in: query, name: page, schema: { type: integer, default: 1 } }
+        - { in: query, name: limit, schema: { type: integer, default: 10 } }
+      responses:
+        '200':
+          description: Paginated list
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/PaginatedMeta'
+                  - type: object
+                    properties:
+                      data:
+                        type: array
+                        items:
+                          $ref: '#/components/schemas/Project'
+
+  /api/admin/moderation/{project_id}:
+    get:
+      tags: [Moderation]
+      summary: Get project moderation details
+      security:
+        - BearerAuth: []
+      parameters:
+        - { in: path, name: project_id, required: true, schema: { type: integer } }
+      responses:
+        '200':
+          description: Project with full moderation info
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Project'
+        '404':
+          description: Not found
+
+    patch:
+      tags: [Moderation]
+      summary: Approve or reject project
+      security:
+        - BearerAuth: []
+      parameters:
+        - { in: path, name: project_id, required: true, schema: { type: integer } }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [decision]
+              properties:
+                decision:
+                  type: string
+                  enum: [approve, reject]
+                  example: approve
+                moderator_note:
+                  type: string
+                  description: Required when rejecting; shown to project author
+                  example: Проект содержит признаки рекламы запрещённых товаров
+      responses:
+        '200':
+          description: Updated project
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Project'
+        '400':
+          description: Project is not in pending_human status
+
+  /api/admin/moderation/{project_id}/recheck:
+    post:
+      tags: [Moderation]
+      summary: Re-run AI check on a project
+      description: Resets moderation state and re-runs AI. Useful after author edits the project.
+      security:
+        - BearerAuth: []
+      parameters:
+        - { in: path, name: project_id, required: true, schema: { type: integer } }
+      responses:
+        '200':
+          description: Project with fresh moderation result
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Project'
+
+  /api/admin/categories/{id}:
+    delete:
+      tags: [Admin]
+      summary: Delete a category
+      security:
+        - BearerAuth: []
+      parameters:
+        - { in: path, name: id, required: true, schema: { type: integer } }
+      responses:
+        '204':
+          description: Deleted
+        '404':
+          description: Not found
