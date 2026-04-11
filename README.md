@@ -1,6 +1,6 @@
 # Crowdfunding Platform
 
-REST API на Go + фронтенд.
+REST API на Go + фронтенд на Vue 3 (TypeScript, Vite, Tailwind CSS).
 
 ---
 
@@ -13,7 +13,7 @@ REST API на Go + фронтенд.
 | База данных | PostgreSQL 16 |
 | Кэш / токены | Redis 7 |
 | Аутентификация | JWT (access 15 мин + refresh 7 дней) |
-| Фронтенд | nginx (статика) |
+| Фронтенд | Vue 3, TypeScript, Vite, Tailwind CSS 4, Pinia, nginx (статика) |
 
 ---
 
@@ -59,12 +59,14 @@ make help        # показать все команды
 
 ## Локальная разработка (без Docker)
 
-### Требования
+### Бэкенд
+
+#### Требования
 - Go 1.25+
 - PostgreSQL 16
 - Redis 7
 
-### Настройка
+#### Настройка
 
 ```bash
 cd back
@@ -81,6 +83,41 @@ make run
 ```
 
 При старте GORM автоматически создаёт все таблицы.
+
+---
+
+### Фронтенд
+
+#### Требования
+- Node.js 18+
+- npm
+
+#### Рекомендуемые инструменты
+
+**IDE:** [VS Code](https://code.visualstudio.com/) + [Vue (Official)](https://marketplace.visualstudio.com/items?itemName=Vue.volar) (Vetur нужно отключить).
+
+**Расширения браузера:** [Vue.js devtools](https://chromewebstore.google.com/detail/vuejs-devtools/nhdogjmejiglipccpnnnanhbledajbpd) (Chrome/Firefox). Включи [Custom Object Formatter](http://bit.ly/object-formatters) в DevTools для удобного просмотра объектов.
+
+#### Настройка
+
+```bash
+cd front
+npm install
+```
+
+#### Compile and Hot-Reload (Development)
+
+```bash
+npm run dev
+```
+
+#### Type-Check, Compile and Minify (Production)
+
+```bash
+npm run build
+```
+
+Конфигурацию Vite можно кастомизировать в `vite.config.ts`. Подробнее — [Vite Configuration Reference](https://vite.dev/config/).
 
 ---
 
@@ -133,8 +170,31 @@ Crowdfunding/
 │   ├── go.mod
 │   └── go.sum
 ├── front/
-│   ├── index.html               # Placeholder (заполняется фронтенд-разработчиком)
-│   └── Dockerfile
+│   ├── public/                  # Статические ассеты (favicon и т.д.)
+│   ├── src/
+│   │   ├── api/                 # API-клиенты (auth, projects, admin, messages)
+│   │   ├── components/
+│   │   │   └── ui/              # Переиспользуемые UI-компоненты (Button, Input, Select и т.д.)
+│   │   ├── pages/               # Страницы (HomePage, AuthPage, ProjectDetailPage и т.д.)
+│   │   ├── router/              # Vue Router конфигурация
+│   │   ├── stores/              # Pinia store (auth)
+│   │   ├── types/               # TypeScript типы
+│   │   ├── lib/                 # Утилиты
+│   │   ├── App.vue              # Корневой компонент
+│   │   ├── main.ts              # Точка входа
+│   │   └── styles.css           # Глобальные стили
+│   ├── .env                     # Переменные окружения (не коммитить!)
+│   ├── Dockerfile               # Nginx для раздачи статики
+│   ├── nginx.conf               # Конфигурация Nginx
+│   ├── index.html               # HTML-шаблон
+│   ├── package.json             # Зависимости и скрипты
+│   ├── package-lock.json        # Lock-файл зависимостей
+│   ├── vite.config.ts           # Конфигурация Vite
+│   ├── tsconfig.json            # TypeScript конфиг
+│   ├── tsconfig.app.json        # TypeScript конфиг для app
+│   ├── tsconfig.node.json       # TypeScript конфиг для node
+│   ├── env.d.ts                 # Type declarations для .vue файлов
+│   └── README.md                # Фронтенд-специфичная документация
 ├── docs/
 │   └── swagger.yaml             # OpenAPI 3.0 спецификация
 ├── docker-compose.yml
