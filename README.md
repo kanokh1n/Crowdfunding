@@ -38,7 +38,7 @@ make build
 | Сервис | URL |
 |---|---|
 | Backend API | http://localhost:8080 |
-| Frontend | http://localhost:3000 |
+| Frontend | http://localhost:5173 |
 | PostgreSQL | localhost:5432 |
 | Redis | localhost:6379 |
 
