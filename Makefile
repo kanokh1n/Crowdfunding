@@ -35,6 +35,20 @@ logs:
 logs-back:
 	docker compose logs -f back
 
+# ── Production ───────────────────────────────────────────────────────────────
+
+## Build and start production (no exposed DB/Redis ports)
+prod-up:
+	docker compose -f docker-compose.prod.yml --env-file .env up -d --build
+
+## Stop production
+prod-down:
+	docker compose -f docker-compose.prod.yml down
+
+## Follow production logs
+prod-logs:
+	docker compose -f docker-compose.prod.yml logs -f
+
 # ── Local development (without Docker) ───────────────────────────────────────
 
 ## Run backend locally (requires local Postgres and Redis)

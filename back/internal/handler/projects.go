@@ -84,12 +84,15 @@ func (h *Handler) GetProject(c *gin.Context) {
 // POST /api/projects
 func (h *Handler) CreateProject(c *gin.Context) {
 	var input struct {
-		Title       string    `json:"title"       binding:"required"`
-		Description string    `json:"description"`
-		GoalAmount  float64   `json:"goal_amount" binding:"required,gt=0"`
-		EndDate     *time.Time `json:"end_date"`
-		CategoryIDs []uint    `json:"category_ids"`
-		ProjectImg  string    `json:"project_img"`
+		Title        string     `json:"title"         binding:"required"`
+		Description  string     `json:"description"`
+		GoalAmount   float64    `json:"goal_amount"   binding:"required,gt=0"`
+		EndDate      *time.Time `json:"end_date"`
+		CategoryIDs  []uint     `json:"category_ids"`
+		ProjectImg   string     `json:"project_img"`
+		LinkTelegram string     `json:"link_telegram" binding:"omitempty,url"`
+		LinkGithub   string     `json:"link_github"   binding:"omitempty,url"`
+		LinkLinkedin string     `json:"link_linkedin" binding:"omitempty,url"`
 	}
 	if err := c.ShouldBindJSON(&input); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
@@ -97,13 +100,16 @@ func (h *Handler) CreateProject(c *gin.Context) {
 	}
 
 	project := model.Project{
-		UserID:      h.currentUserID(c),
-		Title:       input.Title,
-		Description: input.Description,
-		GoalAmount:  input.GoalAmount,
-		EndDate:     input.EndDate,
-		ProjectImg:  input.ProjectImg,
-		Status:      model.StatusPendingAI,
+		UserID:       h.currentUserID(c),
+		Title:        input.Title,
+		Description:  input.Description,
+		GoalAmount:   input.GoalAmount,
+		EndDate:      input.EndDate,
+		ProjectImg:   input.ProjectImg,
+		LinkTelegram: input.LinkTelegram,
+		LinkGithub:   input.LinkGithub,
+		LinkLinkedin: input.LinkLinkedin,
+		Status:       model.StatusPendingAI,
 	}
 
 	if len(input.CategoryIDs) > 0 {
@@ -140,13 +146,16 @@ func (h *Handler) UpdateProject(c *gin.Context) {
 	}
 
 	var input struct {
-		Title       *string                `json:"title"`
-		Description *string                `json:"description"`
-		GoalAmount  *float64               `json:"goal_amount"  binding:"omitempty,gt=0"`
-		EndDate     *time.Time             `json:"end_date"`
-		ProjectImg  *string                `json:"project_img"`
-		Status      *model.ProjectStatus   `json:"status"`
-		CategoryIDs []uint                 `json:"category_ids"`
+		Title        *string              `json:"title"`
+		Description  *string              `json:"description"`
+		GoalAmount   *float64             `json:"goal_amount"   binding:"omitempty,gt=0"`
+		EndDate      *time.Time           `json:"end_date"`
+		ProjectImg   *string              `json:"project_img"`
+		Status       *model.ProjectStatus `json:"status"`
+		CategoryIDs  []uint               `json:"category_ids"`
+		LinkTelegram *string              `json:"link_telegram" binding:"omitempty,url"`
+		LinkGithub   *string              `json:"link_github"   binding:"omitempty,url"`
+		LinkLinkedin *string              `json:"link_linkedin" binding:"omitempty,url"`
 	}
 	if err := c.ShouldBindJSON(&input); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
@@ -171,6 +180,15 @@ func (h *Handler) UpdateProject(c *gin.Context) {
 	}
 	if input.Status != nil {
 		updates["status"] = *input.Status
+	}
+	if input.LinkTelegram != nil {
+		updates["link_telegram"] = *input.LinkTelegram
+	}
+	if input.LinkGithub != nil {
+		updates["link_github"] = *input.LinkGithub
+	}
+	if input.LinkLinkedin != nil {
+		updates["link_linkedin"] = *input.LinkLinkedin
 	}
 
 	if len(updates) > 0 {

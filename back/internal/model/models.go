@@ -49,17 +49,17 @@ type ProjectModeration struct {
 	Project   Project `gorm:"foreignKey:ProjectID"    json:"project,omitempty"`
 
 	// AI stage
-	AIStatus      AIStatus   `gorm:"default:'pending'"       json:"ai_status"`
-	AIScore       float64    `gorm:"default:0"               json:"ai_score"`
-	AIFlags       string     `gorm:"type:text;default:'[]'"  json:"ai_flags"` // JSON array
-	AICheckedAt   *time.Time `                               json:"ai_checked_at"`
+	AIStatus    AIStatus   `gorm:"default:'pending'"       json:"ai_status"`
+	AIScore     float64    `gorm:"default:0"               json:"ai_score"`
+	AIFlags     string     `gorm:"type:text;default:'[]'"  json:"ai_flags"` // JSON array
+	AICheckedAt *time.Time `                               json:"ai_checked_at"`
 
 	// Human stage
-	HumanStatus       HumanStatus `gorm:"default:'pending'"   json:"human_status"`
-	ModeratorID       *uint       `                           json:"moderator_id"`
-	Moderator         *User       `gorm:"foreignKey:ModeratorID" json:"moderator,omitempty"`
-	ModeratorNote     string      `                           json:"moderator_note"`
-	HumanModeratedAt  *time.Time  `                           json:"human_moderated_at"`
+	HumanStatus      HumanStatus `gorm:"default:'pending'"   json:"human_status"`
+	ModeratorID      *uint       `                           json:"moderator_id"`
+	Moderator        *User       `gorm:"foreignKey:ModeratorID" json:"moderator,omitempty"`
+	ModeratorNote    string      `                           json:"moderator_note"`
+	HumanModeratedAt *time.Time  `                           json:"human_moderated_at"`
 
 	CreatedAt time.Time `json:"created_at"`
 	UpdatedAt time.Time `json:"updated_at"`
@@ -68,17 +68,17 @@ type ProjectModeration struct {
 // ─── User ────────────────────────────────────────────────────────────────────
 
 type User struct {
-	ID          uint           `gorm:"primaryKey"                   json:"id"`
-	Email       string         `gorm:"uniqueIndex;not null"         json:"email"`
-	Password    string         `gorm:"not null"                     json:"-"`
-	FIO         string         `                                    json:"fio"`
-	Description string         `                                    json:"description"`
-	ProfileImg  string         `                                    json:"profile_img"`
-	Phone       string         `                                    json:"phone"`
-	Role        Role           `gorm:"default:'user'"               json:"role"`
-	IsVerified  bool           `gorm:"default:false"                json:"is_verified"`
-	CreatedAt   time.Time      `                                    json:"created_at"`
-	UpdatedAt   time.Time      `                                    json:"updated_at"`
+	ID          uint      `gorm:"primaryKey"                   json:"id"`
+	Email       string    `gorm:"uniqueIndex;not null"         json:"email"`
+	Password    string    `gorm:"not null"                     json:"-"`
+	FIO         string    `                                    json:"fio"`
+	Description string    `                                    json:"description"`
+	ProfileImg  string    `                                    json:"profile_img"`
+	Phone       string    `                                    json:"phone"`
+	Role        Role      `gorm:"default:'user'"               json:"role"`
+	IsVerified  bool      `gorm:"default:false"                json:"is_verified"`
+	CreatedAt   time.Time `                                    json:"created_at"`
+	UpdatedAt   time.Time `                                    json:"updated_at"`
 }
 
 // ─── Email verification token ─────────────────────────────────────────────────
@@ -101,22 +101,25 @@ type Category struct {
 // ─── Project ──────────────────────────────────────────────────────────────────
 
 type Project struct {
-	ID            uint           `gorm:"primaryKey"                   json:"id"`
-	UserID        uint           `gorm:"not null"                     json:"user_id"`
-	User          User           `gorm:"foreignKey:UserID"            json:"user,omitempty"`
-	Title         string         `gorm:"not null"                     json:"title"`
-	Description   string         `                                    json:"description"`
-	GoalAmount    float64        `gorm:"type:decimal(10,2);not null"  json:"goal_amount"`
-	CurrentAmount float64        `gorm:"type:decimal(10,2);default:0" json:"current_amount"`
-	ProjectImg    string         `                                    json:"project_img"`
-	Status        ProjectStatus  `gorm:"default:'pending_ai'"         json:"status"`
+	ID            uint               `gorm:"primaryKey"                   json:"id"`
+	UserID        uint               `gorm:"not null"                     json:"user_id"`
+	User          User               `gorm:"foreignKey:UserID"            json:"user,omitempty"`
+	Title         string             `gorm:"not null"                     json:"title"`
+	Description   string             `                                    json:"description"`
+	GoalAmount    float64            `gorm:"type:decimal(10,2);not null"  json:"goal_amount"`
+	CurrentAmount float64            `gorm:"type:decimal(10,2);default:0" json:"current_amount"`
+	ProjectImg    string             `                                    json:"project_img"`
+	LinkTelegram  string             `                                    json:"link_telegram"`
+	LinkGithub    string             `                                    json:"link_github"`
+	LinkLinkedin  string             `                                    json:"link_linkedin"`
+	Status        ProjectStatus      `gorm:"default:'pending_ai'"         json:"status"`
 	Moderation    *ProjectModeration `gorm:"foreignKey:ProjectID"     json:"moderation,omitempty"`
-	EndDate       *time.Time     `                                    json:"end_date"`
-	Categories    []Category     `gorm:"many2many:project_categories" json:"categories,omitempty"`
-	LikesCount    int64          `gorm:"-"                            json:"likes_count"`
-	CreatedAt     time.Time      `                                    json:"created_at"`
-	UpdatedAt     time.Time      `                                    json:"updated_at"`
-	DeletedAt     gorm.DeletedAt `gorm:"index"                        json:"-"`
+	EndDate       *time.Time         `                                    json:"end_date"`
+	Categories    []Category         `gorm:"many2many:project_categories" json:"categories,omitempty"`
+	LikesCount    int64              `gorm:"-"                            json:"likes_count"`
+	CreatedAt     time.Time          `                                    json:"created_at"`
+	UpdatedAt     time.Time          `                                    json:"updated_at"`
+	DeletedAt     gorm.DeletedAt     `gorm:"index"                        json:"-"`
 }
 
 // ─── Pledge ───────────────────────────────────────────────────────────────────
