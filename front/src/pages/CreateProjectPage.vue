@@ -49,7 +49,7 @@ async function handleSubmit() {
       title: title.value,
       description: description.value,
       goal_amount: parseFloat(goalAmount.value),
-      end_date: endDate.value || undefined,
+      end_date: endDate.value ? endDate.value + 'T00:00:00Z' : undefined,
       project_img: projectImg.value || undefined,
       category_ids: categoryId.value ? [categoryId.value] : undefined,
     })

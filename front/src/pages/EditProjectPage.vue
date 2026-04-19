@@ -35,7 +35,7 @@ async function loadData() {
     title.value = project.title
     description.value = project.description
     goalAmount.value = String(project.goal_amount)
-    endDate.value = project.end_date ?? ''
+    endDate.value = project.end_date ? project.end_date.slice(0, 10) : ''
     projectImg.value = project.project_img ?? ''
     categoryIds.value = project.categories?.map(c => c.id) ?? []
     categories.value = cats
@@ -53,7 +53,7 @@ async function handleSubmit() {
       title: title.value,
       description: description.value,
       goal_amount: parseFloat(goalAmount.value),
-      end_date: endDate.value || undefined,
+      end_date: endDate.value ? endDate.value + 'T00:00:00Z' : undefined,
       project_img: projectImg.value || undefined,
       category_ids: categoryIds.value,
     })
