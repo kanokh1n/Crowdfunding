@@ -5,7 +5,8 @@ import Button from '@/components/ui/Button.vue'
 import Input from '@/components/ui/Input.vue'
 import Label from '@/components/ui/Label.vue'
 import Textarea from '@/components/ui/Textarea.vue'
-import { ArrowLeft, Image as ImageIcon } from 'lucide-vue-next'
+import ImageUpload from '@/components/ui/ImageUpload.vue'
+import { ArrowLeft } from 'lucide-vue-next'
 import * as projectApi from '@/api/projects'
 import * as adminApi from '@/api/admin'
 import type { Category } from '@/types'
@@ -157,16 +158,8 @@ onMounted(() => {
 
           <!-- Изображение -->
           <div class="space-y-2">
-            <Label for="image">URL изображения</Label>
-            <div class="relative">
-              <ImageIcon class="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-neutral-400" />
-              <Input
-                id="image"
-                v-model="projectImg"
-                placeholder="https://example.com/image.jpg"
-                class="pl-10"
-              />
-            </div>
+            <Label>Изображение проекта</Label>
+            <ImageUpload v-model="projectImg" />
           </div>
 
           <!-- Ошибка -->

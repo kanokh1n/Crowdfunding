@@ -34,6 +34,8 @@ services:
       REDIS_URL: redis:6379
       JWT_SECRET: ${JWT_SECRET}
       PORT: "8080"
+    volumes:
+      - uploads_data:/app/uploads
     restart: unless-stopped
     depends_on:
       postgres:
@@ -52,3 +54,4 @@ services:
 volumes:
   postgres_data:
   redis_data:
+  uploads_data:

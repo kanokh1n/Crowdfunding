@@ -38,6 +38,7 @@ func main() {
 	h := handler.New(db, rdb, cfg)
 
 	r := gin.Default()
+	r.Static("/uploads", "./uploads")
 
 	r.Use(cors.New(cors.Config{
 		AllowOrigins:     []string{"*"},
@@ -97,6 +98,9 @@ func main() {
 		// notifications
 		secured.GET("/notifications", h.ListNotifications)
 		secured.PATCH("/notifications/:id/read", h.MarkNotificationRead)
+
+		// upload
+		secured.POST("/upload", h.UploadImage)
 	}
 
 	// ── Admin ────────────────────────────────────────────────────────────────

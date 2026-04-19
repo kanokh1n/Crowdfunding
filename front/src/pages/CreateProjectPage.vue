@@ -6,8 +6,9 @@ import Input from '@/components/ui/Input.vue'
 import Label from '@/components/ui/Label.vue'
 import Textarea from '@/components/ui/Textarea.vue'
 import Select from '@/components/ui/Select.vue'
+import ImageUpload from '@/components/ui/ImageUpload.vue'
 import type { SelectOption } from '@/components/ui/Select.vue'
-import { ArrowLeft, Image as ImageIcon } from 'lucide-vue-next'
+import { ArrowLeft } from 'lucide-vue-next'
 import * as projectApi from '@/api/projects'
 import * as adminApi from '@/api/admin'
 import type { Category } from '@/types'
@@ -168,19 +169,8 @@ onMounted(() => {
 
           <!-- Изображение -->
           <div class="space-y-2">
-            <Label for="image">URL изображения</Label>
-            <div class="relative">
-              <ImageIcon class="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-neutral-400" />
-              <Input
-                id="image"
-                v-model="projectImg"
-                placeholder="https://example.com/image.jpg"
-                class="pl-10"
-              />
-            </div>
-            <p class="text-neutral-500 text-sm">
-              Оставьте пустым для использования изображения по умолчанию
-            </p>
+            <Label>Изображение проекта</Label>
+            <ImageUpload v-model="projectImg" />
           </div>
 
           <!-- Ошибка -->
