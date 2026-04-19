@@ -1,6 +1,7 @@
 package handler
 
 import (
+	"fmt"
 	"net/http"
 	"time"
 
@@ -123,10 +124,9 @@ func (h *Handler) CreateProject(c *gin.Context) {
 		return
 	}
 
-	// Run AI check synchronously (replace with async job when needed)
-	h.runAICheck(&project)
+	go h.runAICheckAsync(project.ID)
 
-	h.db.Preload("User").Preload("Categories").Preload("Moderation").First(&project, project.ID)
+	h.db.Preload("User").Preload("Categories").First(&project, project.ID)
 	c.JSON(http.StatusCreated, project)
 }
 
@@ -261,6 +261,38 @@ func (h *Handler) findProjectByID(id string) (*model.Project, error) {
 }
 
 var _ = gorm.ErrRecordNotFound // keep gorm import
+
+// runAICheckAsync waits 1 minute, runs AI check, then sends notification to project owner.
+func (h *Handler) runAICheckAsync(projectID uint) {
+	time.Sleep(1 * time.Minute)
+
+	var project model.Project
+	if err := h.db.First(&project, projectID).Error; err != nil {
+		return
+	}
+
+	h.runAICheck(&project)
+
+	var notif model.Notification
+	if project.Status == model.StatusPendingHuman {
+		notif = model.Notification{
+			UserID:    project.UserID,
+			ProjectID: &project.ID,
+			Type:      model.NotifAIPassed,
+			Title:     "Проект прошёл автоматическую проверку",
+			Body:      fmt.Sprintf("Проект «%s» успешно прошёл AI-проверку и ожидает модерации администратором.", project.Title),
+		}
+	} else {
+		notif = model.Notification{
+			UserID:    project.UserID,
+			ProjectID: &project.ID,
+			Type:      model.NotifAIFailed,
+			Title:     "Проект не прошёл автоматическую проверку",
+			Body:      fmt.Sprintf("К сожалению, проект «%s» не прошёл AI-проверку.", project.Title),
+		}
+	}
+	h.db.Create(&notif)
+}
 
 // runAICheck runs the stub AI moderation and updates project status.
 func (h *Handler) runAICheck(project *model.Project) {

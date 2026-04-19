@@ -2,21 +2,41 @@
 import { ref, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import Button from '@/components/ui/Button.vue'
+import Input from '@/components/ui/Input.vue'
 import ImageWithFallback from '@/components/ui/ImageWithFallback.vue'
-import { Check, X, ShieldCheck, Settings } from 'lucide-vue-next'
+import { Check, X, ShieldCheck, Settings, Mail } from 'lucide-vue-next'
 import * as adminApi from '@/api/admin'
+import * as notifApi from '@/api/notifications'
 import type { Project } from '@/types'
 
 const router = useRouter()
 const projects = ref<Project[]>([])
 const isLoading = ref(true)
+const loadError = ref('')
 const actionLoading = ref<Record<string, boolean>>({})
+const inviteOpen = ref<Record<number, boolean>>({})
+const inviteMessage = ref<Record<number, string>>({})
+const inviteLoading = ref<Record<number, boolean>>({})
+
+async function handleInvite(projectId: number) {
+  const msg = inviteMessage.value[projectId]?.trim()
+  if (!msg) return
+  inviteLoading.value[projectId] = true
+  try {
+    await notifApi.sendInvite(projectId, msg)
+    inviteOpen.value[projectId] = false
+    inviteMessage.value[projectId] = ''
+  } finally {
+    inviteLoading.value[projectId] = false
+  }
+}
 
 async function loadProjects() {
   isLoading.value = true
   try {
     projects.value = await adminApi.getModerationQueue()
-  } catch (err) {
+  } catch (err: any) {
+    loadError.value = err?.data?.error || err?.message || 'Ошибка загрузки'
     console.error('Failed to load moderation queue:', err)
   } finally {
     isLoading.value = false
@@ -68,6 +88,10 @@ onMounted(() => {
         <p class="text-neutral-600">
           Проверяйте и одобряйте проекты перед публикацией на платформе
         </p>
+      </div>
+
+      <div v-if="loadError" class="bg-red-50 border border-red-200 rounded-xl p-6 text-red-700">
+        Ошибка: {{ loadError }}
       </div>
 
       <div v-if="isLoading" class="text-center py-20">
@@ -143,6 +167,15 @@ onMounted(() => {
                     Выбрать метод проверки
                   </Button>
                   <Button
+                    @click="inviteOpen[project.id] = !inviteOpen[project.id]"
+                    variant="outline"
+                    class="text-sm"
+                    :disabled="actionLoading[project.id]"
+                  >
+                    <Mail class="w-4 h-4 mr-1 sm:mr-2" />
+                    Пригласить
+                  </Button>
+                  <Button
                     @click="handleModerate(project.id, 'approve')"
                     class="bg-green-600 hover:bg-green-700 text-sm"
                     :disabled="actionLoading[project.id]"
@@ -158,6 +191,23 @@ onMounted(() => {
                   >
                     <X class="w-4 h-4 mr-1 sm:mr-2" />
                     Отклонить
+                  </Button>
+                </div>
+
+                <!-- Форма приглашения -->
+                <div v-if="inviteOpen[project.id]" class="mt-4 p-4 bg-blue-50 rounded-lg border border-blue-200">
+                  <p class="text-sm font-medium text-blue-800 mb-2">Сообщение стартаперу</p>
+                  <Input
+                    v-model="inviteMessage[project.id]"
+                    placeholder="Например: Приглашаем вас на встречу 25 апреля в 15:00"
+                    class="mb-2"
+                  />
+                  <Button
+                    @click="handleInvite(project.id)"
+                    class="bg-blue-600 hover:bg-blue-700 text-sm"
+                    :disabled="inviteLoading[project.id] || !inviteMessage[project.id]?.trim()"
+                  >
+                    Отправить уведомление
                   </Button>
                 </div>
               </div>

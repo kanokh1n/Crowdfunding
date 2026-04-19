@@ -153,6 +153,27 @@ type Like struct {
 	CreatedAt time.Time `                                                             json:"created_at"`
 }
 
+// ─── Notification ─────────────────────────────────────────────────────────────
+
+type NotificationType string
+
+const (
+	NotifAIPassed NotificationType = "ai_passed"
+	NotifAIFailed NotificationType = "ai_failed"
+	NotifInvite   NotificationType = "invite"
+)
+
+type Notification struct {
+	ID        uint             `gorm:"primaryKey"    json:"id"`
+	UserID    uint             `gorm:"not null"      json:"user_id"`
+	ProjectID *uint            `                     json:"project_id"`
+	Type      NotificationType `gorm:"not null"      json:"type"`
+	Title     string           `gorm:"not null"      json:"title"`
+	Body      string           `                     json:"body"`
+	IsRead    bool             `gorm:"default:false" json:"is_read"`
+	CreatedAt time.Time        `                     json:"created_at"`
+}
+
 // ─── Message ──────────────────────────────────────────────────────────────────
 
 type Message struct {

@@ -106,6 +106,34 @@ func (h *Handler) AdminModerationDecide(c *gin.Context) {
 	c.JSON(http.StatusOK, project)
 }
 
+// POST /api/admin/moderation/:project_id/invite
+// Отправляет стартаперу приглашение на модерацию с произвольным сообщением от админа.
+func (h *Handler) AdminModerationInvite(c *gin.Context) {
+	var project model.Project
+	if err := h.db.First(&project, c.Param("project_id")).Error; err != nil {
+		c.JSON(http.StatusNotFound, gin.H{"error": "project not found"})
+		return
+	}
+
+	var input struct {
+		Message string `json:"message" binding:"required"`
+	}
+	if err := c.ShouldBindJSON(&input); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+
+	notif := model.Notification{
+		UserID:    project.UserID,
+		ProjectID: &project.ID,
+		Type:      model.NotifInvite,
+		Title:     "Приглашение на модерацию",
+		Body:      input.Message,
+	}
+	h.db.Create(&notif)
+	c.JSON(http.StatusOK, gin.H{"ok": true})
+}
+
 // POST /api/admin/moderation/:project_id/recheck
 // Повторно прогнать AI-проверку (например, после редактирования проекта).
 func (h *Handler) AdminModerationRecheck(c *gin.Context) {

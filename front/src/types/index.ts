@@ -97,6 +97,18 @@ export interface Message {
   project?: Project
 }
 
+// Notification
+export interface Notification {
+  id: number
+  user_id: number
+  project_id?: number
+  type: 'ai_passed' | 'ai_failed' | 'invite'
+  title: string
+  body: string
+  is_read: boolean
+  created_at: string
+}
+
 // Auth tokens
 export interface AuthTokens {
   access_token: string

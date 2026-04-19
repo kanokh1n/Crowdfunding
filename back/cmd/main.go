@@ -30,6 +30,7 @@ func main() {
 		&model.Comment{},
 		&model.Like{},
 		&model.Message{},
+		&model.Notification{},
 	); err != nil {
 		log.Fatalf("migration failed: %v", err)
 	}
@@ -92,6 +93,10 @@ func main() {
 		secured.GET("/messages", h.ListMessages)
 		secured.POST("/messages", h.SendMessage)
 		secured.PATCH("/messages/:id/read", h.MarkMessageRead)
+
+		// notifications
+		secured.GET("/notifications", h.ListNotifications)
+		secured.PATCH("/notifications/:id/read", h.MarkNotificationRead)
 	}
 
 	// ── Admin ────────────────────────────────────────────────────────────────
@@ -111,6 +116,7 @@ func main() {
 		admin.GET("/moderation", h.AdminModerationList)
 		admin.GET("/moderation/:project_id", h.AdminModerationGet)
 		admin.PATCH("/moderation/:project_id", h.AdminModerationDecide)
+		admin.POST("/moderation/:project_id/invite", h.AdminModerationInvite)
 		admin.POST("/moderation/:project_id/recheck", h.AdminModerationRecheck)
 	}
 
