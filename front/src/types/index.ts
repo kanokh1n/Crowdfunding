@@ -36,6 +36,9 @@ export interface Project {
   categories?: Category[]
   likes_count?: number
   is_liked?: boolean
+  link_telegram?: string
+  link_linkedin?: string
+  link_github?: string
 }
 
 // Project moderation
@@ -120,6 +123,9 @@ export interface CreateProjectInput {
   end_date?: string
   project_img?: string
   category_ids?: number[]
+  link_telegram?: string
+  link_linkedin?: string
+  link_github?: string
 }
 
 export interface UpdateProjectInput extends Partial<CreateProjectInput> {}

@@ -10,10 +10,7 @@ import * as projectApi from '@/api/projects'
 import * as adminApi from '@/api/admin'
 import type { Category } from '@/types'
 
-const props = defineProps<{
-  id: string
-}>()
-
+const props = defineProps<{ id: string }>()
 const router = useRouter()
 const isLoading = ref(false)
 const submitError = ref('')
@@ -26,20 +23,32 @@ const endDate = ref('')
 const projectImg = ref('')
 const categoryIds = ref<number[]>([])
 
+const socialLinks = ref({
+  github: '',
+  telegram: '',
+  linkedin: '',
+})
+
 async function loadData() {
   try {
     const [project, cats] = await Promise.all([
       projectApi.getProject(parseInt(props.id)),
       adminApi.listCategories(),
     ])
+    
     title.value = project.title
     description.value = project.description
     goalAmount.value = String(project.goal_amount)
-    endDate.value = project.end_date ?? ''
+    endDate.value = project.end_date?.slice(0, 10) ?? ''
     projectImg.value = project.project_img ?? ''
     categoryIds.value = project.categories?.map(c => c.id) ?? []
     categories.value = cats
-  } catch {
+
+    socialLinks.value.telegram = project.link_telegram || ''
+    socialLinks.value.github = project.link_github || ''
+    socialLinks.value.linkedin = project.link_linkedin || ''
+  } catch (err) {
+    console.error('Load error:', err)
     submitError.value = 'Не удалось загрузить проект'
   }
 }
@@ -53,9 +62,12 @@ async function handleSubmit() {
       title: title.value,
       description: description.value,
       goal_amount: parseFloat(goalAmount.value),
-      end_date: endDate.value || undefined,
+      end_date: endDate.value ? new Date(endDate.value).toISOString() : undefined,
       project_img: projectImg.value || undefined,
       category_ids: categoryIds.value,
+      link_telegram: socialLinks.value.telegram || undefined,
+      link_github: socialLinks.value.github || undefined,
+      link_linkedin: socialLinks.value.linkedin || undefined,
     })
     router.push({ name: 'project-detail', params: { id: props.id } })
   } catch (err: any) {
@@ -103,27 +115,11 @@ onMounted(() => {
             />
           </div>
 
-          <!-- Краткое описание -->
+          <!-- Описание -->
           <div class="space-y-2">
-            <Label for="description">Краткое описание *</Label>
+            <Label for="description">Описание *</Label>
             <Textarea
               id="description"
-              v-model="description"
-              placeholder="Краткое описание проекта (до 200 символов)"
-              :rows="3"
-              :maxlength="200"
-              required
-            />
-            <div class="text-neutral-500 text-right text-sm">
-              {{ description.length }}/200
-            </div>
-          </div>
-
-          <!-- Полное описание -->
-          <div class="space-y-2">
-            <Label for="fullDescription">Полное описание *</Label>
-            <Textarea
-              id="fullDescription"
               v-model="description"
               placeholder="Подробное описание проекта, его целей и особенностей"
               :rows="8"
@@ -165,6 +161,33 @@ onMounted(() => {
                 v-model="projectImg"
                 placeholder="https://example.com/image.jpg"
                 class="pl-10"
+              />
+            </div>
+          </div>
+
+          <div class="space-y-4">
+            <div class="space-y-2">
+              <Label for="telegramLink">Telegram</Label>
+              <Input
+                id="telegramLink"
+                v-model="socialLinks.telegram"
+                placeholder="https://t.me/yourproject"
+              />
+            </div>
+            <div class="space-y-2">
+              <Label for="githubLink">GitHub</Label>
+              <Input
+                id="githubLink"
+                v-model="socialLinks.github"
+                placeholder="https://github.com/yourproject"
+              />
+            </div>
+            <div class="space-y-2">
+              <Label for="linkedinLink">LinkedIn</Label>
+              <Input
+                id="linkedinLink"
+                v-model="socialLinks.linkedin"
+                placeholder="https://linkedin.com/in/yourprofile"
               />
             </div>
           </div>

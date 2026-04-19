@@ -8,7 +8,7 @@ import Progress from '@/components/ui/Progress.vue'
 import ImageWithFallback from '@/components/ui/ImageWithFallback.vue'
 import {
   ArrowLeft, Calendar, User, Target, TrendingUp, Edit,
-  MessageCircle, Clock, DollarSign
+  MessageCircle, Clock, DollarSign, Github, Linkedin, Send
 } from 'lucide-vue-next'
 import * as projectApi from '@/api/projects'
 import type { Project, Comment as CommentType } from '@/types'
@@ -191,7 +191,18 @@ onMounted(() => {
               <div class="absolute top-4 left-4 px-3 sm:px-4 py-1.5 sm:py-2 bg-white/90 backdrop-blur-sm rounded-full text-xs sm:text-sm">
                 {{ project.categories?.map(c => c.title).join(', ') || 'Без категории' }}
               </div>
+              <Button
+                v-if="canEdit"
+                variant="outline"
+                size="sm"
+                @click="handleEdit"
+                class="absolute top-4 right-4"
+              >
+                <Edit class="w-4 h-4 mr-1" />
+                Редактировать
+              </Button>
               <button
+                v-else
                 @click="handleLike"
                 class="absolute top-4 right-4 p-2 sm:p-3 bg-white/90 backdrop-blur-sm rounded-full hover:bg-white transition-colors"
               >
@@ -203,19 +214,7 @@ onMounted(() => {
             </div>
 
             <div class="p-6 sm:p-8">
-              <div class="flex items-start justify-between gap-4">
-                <h1 class="mb-3 sm:mb-4 flex-1">{{ project.title }}</h1>
-                <Button
-                  v-if="canEdit"
-                  variant="outline"
-                  size="sm"
-                  @click="handleEdit"
-                  class="flex-shrink-0"
-                >
-                  <Edit class="w-4 h-4 mr-1" />
-                  Редактировать
-                </Button>
-              </div>
+              <h1 class="mb-3 sm:mb-4">{{ project.title }}</h1>
               <div class="flex items-center gap-3 sm:gap-4 text-neutral-600 mb-4 sm:mb-6 text-sm">
                 <div class="flex items-center gap-2">
                   <User class="w-4 h-4 sm:w-5 sm:h-5" />
@@ -235,9 +234,42 @@ onMounted(() => {
               </div>
 
               <!-- Социальные сети -->
-              <div class="mt-6 sm:mt-8 pt-6 sm:pt-8 border-t">
+              <div
+                v-if="project.link_telegram || project.link_github || project.link_linkedin"
+                class="mt-6 sm:mt-8 pt-6 sm:pt-8 border-t"
+              >
                 <h3 class="mb-3 sm:mb-4">Ссылки</h3>
                 <div class="flex flex-wrap gap-2 sm:gap-3">
+                  <a
+                    v-if="project.link_telegram"
+                    :href="project.link_telegram"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    class="inline-flex items-center gap-2 px-4 py-2 bg-neutral-100 hover:bg-neutral-200 text-neutral-800 rounded-lg transition-colors text-sm font-medium"
+                  >
+                    <Send class="w-4 h-4" />
+                    Telegram
+                  </a>
+                  <a
+                    v-if="project.link_github"
+                    :href="project.link_github"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    class="inline-flex items-center gap-2 px-4 py-2 bg-neutral-100 hover:bg-neutral-200 text-neutral-800 rounded-lg transition-colors text-sm font-medium"
+                  >
+                    <Github class="w-4 h-4" />
+                    GitHub
+                  </a>
+                  <a
+                    v-if="project.link_linkedin"
+                    :href="project.link_linkedin"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    class="inline-flex items-center gap-2 px-4 py-2 bg-neutral-100 hover:bg-neutral-200 text-neutral-800 rounded-lg transition-colors text-sm font-medium"
+                  >
+                    <Linkedin class="w-4 h-4" />
+                    LinkedIn
+                  </a>
                 </div>
               </div>
 

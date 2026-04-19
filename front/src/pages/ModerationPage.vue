@@ -1,13 +1,11 @@
 <script setup lang="ts">
 import { ref, onMounted } from 'vue'
-import { useRouter } from 'vue-router'
 import Button from '@/components/ui/Button.vue'
 import ImageWithFallback from '@/components/ui/ImageWithFallback.vue'
-import { Check, X, ShieldCheck, Settings } from 'lucide-vue-next'
+import { Check, X, ShieldCheck } from 'lucide-vue-next'
 import * as adminApi from '@/api/admin'
 import type { Project } from '@/types'
 
-const router = useRouter()
 const projects = ref<Project[]>([])
 const isLoading = ref(true)
 const actionLoading = ref<Record<string, boolean>>({})
@@ -34,10 +32,6 @@ async function handleModerate(projectId: number, decision: 'approve' | 'reject')
   } finally {
     actionLoading.value[projectId] = false
   }
-}
-
-function handleChooseMethod(projectId: number) {
-  router.push({ name: 'moderation-choice', params: { id: projectId } })
 }
 
 function formatDate(dateStr: string) {
@@ -126,7 +120,7 @@ onMounted(() => {
                 </div>
 
                 <div class="mb-4 sm:mb-6">
-                  <h3 class="mb-1 sm:mb-2 font-semibold">Полное описание</h3>
+                  <h3 class="mb-1 sm:mb-2 font-semibold">Описание</h3>
                   <p class="text-neutral-600 leading-relaxed text-sm line-clamp-3">
                     {{ project.description }}
                   </p>
@@ -134,15 +128,7 @@ onMounted(() => {
 
                 <!-- Кнопки модерации -->
                 <div class="flex flex-col sm:flex-row gap-2 sm:gap-3">
-                  <Button
-                    @click="handleChooseMethod(project.id)"
-                    class="bg-blue-600 hover:bg-blue-700 text-sm"
-                    :disabled="actionLoading[project.id]"
-                  >
-                    <Settings class="w-4 h-4 mr-1 sm:mr-2" />
-                    Выбрать метод проверки
-                  </Button>
-                  <Button
+<Button
                     @click="handleModerate(project.id, 'approve')"
                     class="bg-green-600 hover:bg-green-700 text-sm"
                     :disabled="actionLoading[project.id]"

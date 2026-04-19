@@ -40,13 +40,6 @@ const router = createRouter({
       component: () => import('@/pages/ModerationPage.vue'),
       meta: { requiresAuth: true, requiresAdmin: true },
     },
-    {
-      path: '/moderation/:id',
-      name: 'moderation-choice',
-      component: () => import('@/pages/ModerationChoicePage.vue'),
-      props: true,
-      meta: { requiresAuth: true, requiresAdmin: true },
-    },
   ],
 })
 
