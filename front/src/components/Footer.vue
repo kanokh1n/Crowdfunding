@@ -49,7 +49,11 @@ function navigateTo(name: string) {
             </li>
             <li><a href="#" class="hover:text-white transition-colors">О нас</a></li>
             <li><a href="#" class="hover:text-white transition-colors">Проекты</a></li>
-            <li><a href="#" class="hover:text-white transition-colors">Как это работает</a></li>
+            <li>
+              <button @click="navigateTo('how-it-works')" class="hover:text-white transition-colors">
+                Как это работает
+              </button>
+            </li>
             <li><a href="#" class="hover:text-white transition-colors">FAQ</a></li>
           </ul>
         </div>

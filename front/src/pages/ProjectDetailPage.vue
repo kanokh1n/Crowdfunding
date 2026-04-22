@@ -8,7 +8,7 @@ import Progress from '@/components/ui/Progress.vue'
 import ImageWithFallback from '@/components/ui/ImageWithFallback.vue'
 import {
   ArrowLeft, Calendar, User, Target, TrendingUp, Edit,
-  MessageCircle, Clock, DollarSign, Trash2, Pencil, X, Check,
+  MessageCircle, Clock, Trash2, Pencil, X, Check,
   Github, Linkedin, Send
 } from 'lucide-vue-next'
 import * as projectApi from '@/api/projects'
@@ -261,11 +261,9 @@ onMounted(() => {
                 </div>
               </div>
 
-              <div class="prose max-w-none">
+              <div>
                 <h3 class="mb-3 sm:mb-4">О проекте</h3>
-                <p class="text-neutral-700 leading-relaxed whitespace-pre-line">
-                  {{ project.description }}
-                </p>
+                <p class="text-neutral-700 leading-relaxed whitespace-pre-wrap break-words">{{ project.description }}</p>
               </div>
 
               <!-- Социальные сети -->
@@ -463,7 +461,6 @@ onMounted(() => {
                   <span class="flex items-center text-neutral-600">₽</span>
                 </div>
                 <Button @click="handleDonate" class="w-full" :disabled="!donationAmount">
-                  <DollarSign class="w-4 h-4 mr-2" />
                   Поддержать проект
                 </Button>
               </div>

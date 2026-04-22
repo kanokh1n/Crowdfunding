@@ -66,7 +66,12 @@ function getInitials(name: string) {
             Проекты
           </button>
           <span class="text-neutral-500">О платформе</span>
-          <span class="text-neutral-500">Как это работает</span>
+          <button
+            class="text-neutral-700 hover:text-neutral-900 transition-colors"
+            @click="navigateTo('how-it-works')"
+          >
+            Как это работает
+          </button>
         </nav>
 
         <!-- Actions -->
