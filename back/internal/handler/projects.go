@@ -32,11 +32,10 @@ func (h *Handler) ListProjects(c *gin.Context) {
 			Where("pc.category_id = ?", cat)
 	}
 	if search := c.Query("search"); search != "" {
-		query = query.
-			Joins("LEFT JOIN project_categories pc_s ON pc_s.project_id = projects.id").
-			Joins("LEFT JOIN categories cat_s ON cat_s.id = pc_s.category_id").
-			Where("projects.title ILIKE ? OR cat_s.title ILIKE ?", "%"+search+"%", "%"+search+"%").
-			Group("projects.id")
+		query = query.Where(
+			"projects.title ILIKE ? OR EXISTS (SELECT 1 FROM project_categories pc_s JOIN categories cat_s ON cat_s.id = pc_s.category_id WHERE pc_s.project_id = projects.id AND cat_s.title ILIKE ?)",
+			"%"+search+"%", "%"+search+"%",
+		)
 	}
 
 	sort := c.Query("sort")
