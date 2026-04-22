@@ -33,7 +33,8 @@ const filteredProjects = computed(() => {
     const q = searchQuery.value.toLowerCase()
     result = result.filter(p =>
       p.title.toLowerCase().includes(q) ||
-      p.description.toLowerCase().includes(q)
+      p.description.toLowerCase().includes(q) ||
+      p.categories?.some(c => c.title.toLowerCase().includes(q))
     )
   }
 
