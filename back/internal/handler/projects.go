@@ -94,6 +94,7 @@ func (h *Handler) CreateProject(c *gin.Context) {
 		EndDate      *time.Time `json:"end_date"`
 		CategoryIDs  []uint     `json:"category_ids"`
 		ProjectImg   string     `json:"project_img"`
+		RoadmapFile  string     `json:"roadmap_file"`
 		LinkTelegram string     `json:"link_telegram" binding:"omitempty,url"`
 		LinkGithub   string     `json:"link_github"   binding:"omitempty,url"`
 		LinkLinkedin string     `json:"link_linkedin" binding:"omitempty,url"`
@@ -110,6 +111,7 @@ func (h *Handler) CreateProject(c *gin.Context) {
 		GoalAmount:   input.GoalAmount,
 		EndDate:      input.EndDate,
 		ProjectImg:   input.ProjectImg,
+		RoadmapFile:  input.RoadmapFile,
 		LinkTelegram: input.LinkTelegram,
 		LinkGithub:   input.LinkGithub,
 		LinkLinkedin: input.LinkLinkedin,
@@ -265,12 +267,35 @@ func (h *Handler) findProjectByID(id string) (*model.Project, error) {
 
 var _ = gorm.ErrRecordNotFound // keep gorm import
 
-// runAICheckAsync waits 1 minute, runs AI check, then sends notification to project owner.
+// runAICheckAsync waits 1 minute, checks roadmap presence, then sends notification.
 func (h *Handler) runAICheckAsync(projectID uint) {
 	time.Sleep(1 * time.Minute)
 
 	var project model.Project
 	if err := h.db.First(&project, projectID).Error; err != nil {
+		return
+	}
+
+	// Roadmap обязателен — без него AI отклоняет проект
+	if project.RoadmapFile == "" {
+		now := time.Now()
+		mod := model.ProjectModeration{
+			ProjectID:   project.ID,
+			AIStatus:    model.AIStatusFailed,
+			AIScore:     0,
+			AIFlags:     `["no_roadmap"]`,
+			AICheckedAt: &now,
+			HumanStatus: model.HumanStatusPending,
+		}
+		h.db.Create(&mod)
+		h.db.Model(&project).Update("status", model.StatusRejectedAI)
+		h.db.Create(&model.Notification{
+			UserID:    project.UserID,
+			ProjectID: &project.ID,
+			Type:      model.NotifAIFailed,
+			Title:     "Проект не прошёл автоматическую проверку",
+			Body:      fmt.Sprintf("Проект «%s» отклонён: не приложен roadmap (PDF или PPTX).", project.Title),
+		})
 		return
 	}
 

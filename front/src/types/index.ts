@@ -27,6 +27,7 @@ export interface Project {
   goal_amount: number
   current_amount: number
   project_img?: string
+  roadmap_file?: string
   link_telegram?: string
   link_github?: string
   link_linkedin?: string
@@ -134,6 +135,7 @@ export interface CreateProjectInput {
   goal_amount: number
   end_date?: string
   project_img?: string
+  roadmap_file?: string
   category_ids?: number[]
   link_telegram?: string
   link_github?: string

@@ -3,7 +3,7 @@ import { ref, onMounted } from 'vue'
 import Button from '@/components/ui/Button.vue'
 import Input from '@/components/ui/Input.vue'
 import ImageWithFallback from '@/components/ui/ImageWithFallback.vue'
-import { Check, X, ShieldCheck, Mail } from 'lucide-vue-next'
+import { Check, X, ShieldCheck, Mail, FileText } from 'lucide-vue-next'
 import * as adminApi from '@/api/admin'
 import * as notifApi from '@/api/notifications'
 import type { Project } from '@/types'
@@ -141,6 +141,24 @@ onMounted(() => {
                       {{ project.status === 'pending_ai' ? 'AI проверка' : 'Ожидает модерации' }}
                     </div>
                   </div>
+                </div>
+
+                <!-- Roadmap -->
+                <div v-if="project.roadmap_file" class="mb-4 sm:mb-6 p-3 bg-blue-50 border border-blue-200 rounded-lg flex items-center gap-3">
+                  <FileText class="w-5 h-5 text-blue-600 shrink-0" />
+                  <span class="text-sm text-blue-800 flex-1">Roadmap прикреплён</span>
+                  <a
+                    :href="project.roadmap_file"
+                    target="_blank"
+                    download
+                    class="text-xs px-3 py-1.5 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+                  >
+                    Скачать
+                  </a>
+                </div>
+                <div v-else class="mb-4 sm:mb-6 p-3 bg-red-50 border border-red-200 rounded-lg flex items-center gap-3">
+                  <FileText class="w-5 h-5 text-red-500 shrink-0" />
+                  <span class="text-sm text-red-700">Roadmap не приложен</span>
                 </div>
 
                 <div class="mb-4 sm:mb-6">

@@ -102,6 +102,7 @@ func main() {
 
 		// upload
 		secured.POST("/upload", h.UploadImage)
+		secured.POST("/upload/document", h.UploadDocument)
 	}
 
 	// ── Admin ────────────────────────────────────────────────────────────────

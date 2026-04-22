@@ -7,6 +7,7 @@ import Label from '@/components/ui/Label.vue'
 import Textarea from '@/components/ui/Textarea.vue'
 import Select from '@/components/ui/Select.vue'
 import ImageUpload from '@/components/ui/ImageUpload.vue'
+import DocumentUpload from '@/components/ui/DocumentUpload.vue'
 import type { SelectOption } from '@/components/ui/Select.vue'
 import { ArrowLeft } from 'lucide-vue-next'
 import * as projectApi from '@/api/projects'
@@ -24,6 +25,8 @@ const description = ref('')
 const goalAmount = ref('')
 const endDate = ref('')
 const projectImg = ref('')
+const roadmapFile = ref('')
+const roadmapFileName = ref('')
 
 const socialLinks = ref({
   github: '',
@@ -50,6 +53,7 @@ async function handleSubmit() {
       goal_amount: parseFloat(goalAmount.value),
       end_date: endDate.value ? new Date(endDate.value).toISOString() : undefined,
       project_img: projectImg.value || undefined,
+      roadmap_file: roadmapFile.value || undefined,
       category_ids: categoryId.value ? [categoryId.value] : undefined,
       link_telegram: socialLinks.value.telegram || undefined,
       link_github: socialLinks.value.github || undefined,
@@ -156,6 +160,12 @@ onMounted(() => {
           <div class="space-y-2">
             <Label>Изображение проекта</Label>
             <ImageUpload v-model="projectImg" />
+          </div>
+
+          <!-- Roadmap -->
+          <div class="space-y-2">
+            <Label>Roadmap * <span class="text-neutral-400 font-normal text-xs">(PDF или PPTX — обязателен для прохождения проверки)</span></Label>
+            <DocumentUpload v-model="roadmapFile" v-model:fileName="roadmapFileName" />
           </div>
 
           <!-- Соцсети -->

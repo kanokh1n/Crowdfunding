@@ -103,7 +103,10 @@ onMounted(() => {
     <!-- Filters -->
     <section class="sticky top-[57px] sm:top-16 z-40 bg-white border-b border-neutral-200 shadow-sm">
       <div class="max-w-7xl mx-auto px-4 sm:px-6 py-3 sm:py-4">
-        <div class="flex gap-2 overflow-x-auto scrollbar-hide">
+        <div
+          class="flex gap-2 overflow-x-auto scrollbar-hide"
+          @wheel.prevent="e => (e.currentTarget as HTMLElement).scrollLeft += e.deltaY"
+        >
           <button
             v-for="cat in allCategories"
             :key="String(cat.id)"

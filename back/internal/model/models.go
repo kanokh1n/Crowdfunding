@@ -109,6 +109,7 @@ type Project struct {
 	GoalAmount    float64            `gorm:"type:decimal(10,2);not null"  json:"goal_amount"`
 	CurrentAmount float64            `gorm:"type:decimal(10,2);default:0" json:"current_amount"`
 	ProjectImg    string             `                                    json:"project_img"`
+	RoadmapFile   string             `                                    json:"roadmap_file"`
 	LinkTelegram  string             `                                    json:"link_telegram"`
 	LinkGithub    string             `                                    json:"link_github"`
 	LinkLinkedin  string             `                                    json:"link_linkedin"`
