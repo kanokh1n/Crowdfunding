@@ -132,6 +132,9 @@ export interface CreateProjectInput {
   end_date?: string
   project_img?: string
   category_ids?: number[]
+  link_telegram?: string
+  link_github?: string
+  link_linkedin?: string
 }
 
 export interface UpdateProjectInput extends Partial<CreateProjectInput> {}

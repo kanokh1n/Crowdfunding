@@ -66,6 +66,14 @@ export function createComment(projectId: number, content: string) {
   })
 }
 
+export function updateComment(commentId: number, content: string) {
+  return apiFetch<Comment>(`/comments/${commentId}`, {
+    method: 'PATCH',
+    requireAuth: true,
+    body: JSON.stringify({ content }),
+  })
+}
+
 export function deleteComment(commentId: number) {
   return apiFetch<void>(`/comments/${commentId}`, {
     method: 'DELETE',

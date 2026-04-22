@@ -1,15 +1,13 @@
 <script setup lang="ts">
 import { ref, onMounted } from 'vue'
-import { useRouter } from 'vue-router'
 import Button from '@/components/ui/Button.vue'
 import Input from '@/components/ui/Input.vue'
 import ImageWithFallback from '@/components/ui/ImageWithFallback.vue'
-import { Check, X, ShieldCheck, Settings, Mail } from 'lucide-vue-next'
+import { Check, X, ShieldCheck, Mail } from 'lucide-vue-next'
 import * as adminApi from '@/api/admin'
 import * as notifApi from '@/api/notifications'
 import type { Project } from '@/types'
 
-const router = useRouter()
 const projects = ref<Project[]>([])
 const isLoading = ref(true)
 const loadError = ref('')
@@ -54,10 +52,6 @@ async function handleModerate(projectId: number, decision: 'approve' | 'reject')
   } finally {
     actionLoading.value[projectId] = false
   }
-}
-
-function handleChooseMethod(projectId: number) {
-  router.push({ name: 'moderation-choice', params: { id: projectId } })
 }
 
 function formatDate(dateStr: string) {
@@ -158,14 +152,6 @@ onMounted(() => {
 
                 <!-- Кнопки модерации -->
                 <div class="flex flex-col sm:flex-row gap-2 sm:gap-3">
-                  <Button
-                    @click="handleChooseMethod(project.id)"
-                    class="bg-blue-600 hover:bg-blue-700 text-sm"
-                    :disabled="actionLoading[project.id]"
-                  >
-                    <Settings class="w-4 h-4 mr-1 sm:mr-2" />
-                    Выбрать метод проверки
-                  </Button>
                   <Button
                     @click="inviteOpen[project.id] = !inviteOpen[project.id]"
                     variant="outline"

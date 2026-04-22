@@ -27,6 +27,12 @@ const endDate = ref('')
 const projectImg = ref('')
 const categoryIds = ref<number[]>([])
 
+const socialLinks = ref({
+  github: '',
+  telegram: '',
+  linkedin: '',
+})
+
 async function loadData() {
   try {
     const [project, cats] = await Promise.all([
@@ -40,6 +46,9 @@ async function loadData() {
     projectImg.value = project.project_img ?? ''
     categoryIds.value = project.categories?.map(c => c.id) ?? []
     categories.value = cats
+    socialLinks.value.telegram = project.link_telegram || ''
+    socialLinks.value.github = project.link_github || ''
+    socialLinks.value.linkedin = project.link_linkedin || ''
   } catch {
     submitError.value = 'Не удалось загрузить проект'
   }
@@ -54,9 +63,12 @@ async function handleSubmit() {
       title: title.value,
       description: description.value,
       goal_amount: parseFloat(goalAmount.value),
-      end_date: endDate.value ? endDate.value + 'T00:00:00Z' : undefined,
+      end_date: endDate.value ? new Date(endDate.value).toISOString() : undefined,
       project_img: projectImg.value || undefined,
       category_ids: categoryIds.value,
+      link_telegram: socialLinks.value.telegram || undefined,
+      link_github: socialLinks.value.github || undefined,
+      link_linkedin: socialLinks.value.linkedin || undefined,
     })
     router.push({ name: 'project-detail', params: { id: props.id } })
   } catch (err: any) {
@@ -160,6 +172,22 @@ onMounted(() => {
           <div class="space-y-2">
             <Label>Изображение проекта</Label>
             <ImageUpload v-model="projectImg" />
+          </div>
+
+          <!-- Соцсети -->
+          <div class="space-y-4">
+            <div class="space-y-2">
+              <Label for="telegramLink">Telegram</Label>
+              <Input id="telegramLink" v-model="socialLinks.telegram" placeholder="https://t.me/yourproject" />
+            </div>
+            <div class="space-y-2">
+              <Label for="githubLink">GitHub</Label>
+              <Input id="githubLink" v-model="socialLinks.github" placeholder="https://github.com/yourproject" />
+            </div>
+            <div class="space-y-2">
+              <Label for="linkedinLink">LinkedIn</Label>
+              <Input id="linkedinLink" v-model="socialLinks.linkedin" placeholder="https://linkedin.com/in/yourprofile" />
+            </div>
           </div>
 
           <!-- Ошибка -->

@@ -21,15 +21,13 @@ const submitError = ref('')
 const title = ref('')
 const categoryId = ref<number | null>(null)
 const description = ref('')
-const fullDescription = ref('')
 const goalAmount = ref('')
 const endDate = ref('')
 const projectImg = ref('')
 
 const socialLinks = ref({
-  website: '',
   github: '',
-  twitter: '',
+  telegram: '',
   linkedin: '',
 })
 
@@ -50,9 +48,12 @@ async function handleSubmit() {
       title: title.value,
       description: description.value,
       goal_amount: parseFloat(goalAmount.value),
-      end_date: endDate.value ? endDate.value + 'T00:00:00Z' : undefined,
+      end_date: endDate.value ? new Date(endDate.value).toISOString() : undefined,
       project_img: projectImg.value || undefined,
       category_ids: categoryId.value ? [categoryId.value] : undefined,
+      link_telegram: socialLinks.value.telegram || undefined,
+      link_github: socialLinks.value.github || undefined,
+      link_linkedin: socialLinks.value.linkedin || undefined,
     })
     router.push({ name: 'home' })
   } catch (err: any) {
@@ -115,28 +116,12 @@ onMounted(() => {
             />
           </div>
 
-          <!-- Краткое описание -->
+          <!-- Описание -->
           <div class="space-y-2">
-            <Label for="description">Краткое описание *</Label>
+            <Label for="description">Описание *</Label>
             <Textarea
               id="description"
               v-model="description"
-              placeholder="Краткое описание проекта (до 200 символов)"
-              :rows="3"
-              :maxlength="200"
-              required
-            />
-            <div class="text-neutral-500 text-right text-sm">
-              {{ description.length }}/200
-            </div>
-          </div>
-
-          <!-- Полное описание -->
-          <div class="space-y-2">
-            <Label for="fullDescription">Полное описание *</Label>
-            <Textarea
-              id="fullDescription"
-              v-model="fullDescription"
               placeholder="Подробное описание проекта, его целей и особенностей"
               :rows="8"
               required
@@ -171,6 +156,22 @@ onMounted(() => {
           <div class="space-y-2">
             <Label>Изображение проекта</Label>
             <ImageUpload v-model="projectImg" />
+          </div>
+
+          <!-- Соцсети -->
+          <div class="space-y-4">
+            <div class="space-y-2">
+              <Label for="telegramLink">Telegram</Label>
+              <Input id="telegramLink" v-model="socialLinks.telegram" placeholder="https://t.me/yourproject" />
+            </div>
+            <div class="space-y-2">
+              <Label for="githubLink">GitHub</Label>
+              <Input id="githubLink" v-model="socialLinks.github" placeholder="https://github.com/yourproject" />
+            </div>
+            <div class="space-y-2">
+              <Label for="linkedinLink">LinkedIn</Label>
+              <Input id="linkedinLink" v-model="socialLinks.linkedin" placeholder="https://linkedin.com/in/yourprofile" />
+            </div>
           </div>
 
           <!-- Ошибка -->

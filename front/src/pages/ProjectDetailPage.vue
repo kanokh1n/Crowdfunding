@@ -8,7 +8,8 @@ import Progress from '@/components/ui/Progress.vue'
 import ImageWithFallback from '@/components/ui/ImageWithFallback.vue'
 import {
   ArrowLeft, Calendar, User, Target, TrendingUp, Edit,
-  MessageCircle, Clock, DollarSign
+  MessageCircle, Clock, DollarSign, Trash2, Pencil, X, Check,
+  Github, Linkedin, Send
 } from 'lucide-vue-next'
 import * as projectApi from '@/api/projects'
 import type { Project, Comment as CommentType } from '@/types'
@@ -73,6 +74,40 @@ async function handleAddComment() {
     commentText.value = ''
   } catch (err: any) {
     submitError.value = err.message || 'Ошибка отправки комментария'
+  }
+}
+
+const editingCommentId = ref<number | null>(null)
+const editingContent = ref('')
+
+function startEdit(comment: CommentType) {
+  editingCommentId.value = comment.id
+  editingContent.value = comment.content
+}
+
+function cancelEdit() {
+  editingCommentId.value = null
+  editingContent.value = ''
+}
+
+async function saveEdit(comment: CommentType) {
+  if (!editingContent.value.trim()) return
+  try {
+    const updated = await projectApi.updateComment(comment.id, editingContent.value)
+    const idx = comments.value.findIndex(c => c.id === comment.id)
+    if (idx !== -1) comments.value[idx] = updated
+    cancelEdit()
+  } catch (err: any) {
+    submitError.value = err.message || 'Ошибка редактирования'
+  }
+}
+
+async function handleDeleteComment(commentId: number) {
+  try {
+    await projectApi.deleteComment(commentId)
+    comments.value = comments.value.filter(c => c.id !== commentId)
+  } catch (err: any) {
+    submitError.value = err.message || 'Ошибка удаления'
   }
 }
 
@@ -191,7 +226,18 @@ onMounted(() => {
               <div class="absolute top-4 left-4 px-3 sm:px-4 py-1.5 sm:py-2 bg-white/90 backdrop-blur-sm rounded-full text-xs sm:text-sm">
                 {{ project.categories?.map(c => c.title).join(', ') || 'Без категории' }}
               </div>
+              <Button
+                v-if="canEdit"
+                variant="outline"
+                size="sm"
+                @click="handleEdit"
+                class="absolute top-4 right-4"
+              >
+                <Edit class="w-4 h-4 mr-1" />
+                Редактировать
+              </Button>
               <button
+                v-else
                 @click="handleLike"
                 class="absolute top-4 right-4 p-2 sm:p-3 bg-white/90 backdrop-blur-sm rounded-full hover:bg-white transition-colors"
               >
@@ -203,19 +249,7 @@ onMounted(() => {
             </div>
 
             <div class="p-6 sm:p-8">
-              <div class="flex items-start justify-between gap-4">
-                <h1 class="mb-3 sm:mb-4 flex-1">{{ project.title }}</h1>
-                <Button
-                  v-if="canEdit"
-                  variant="outline"
-                  size="sm"
-                  @click="handleEdit"
-                  class="flex-shrink-0"
-                >
-                  <Edit class="w-4 h-4 mr-1" />
-                  Редактировать
-                </Button>
-              </div>
+              <h1 class="mb-3 sm:mb-4">{{ project.title }}</h1>
               <div class="flex items-center gap-3 sm:gap-4 text-neutral-600 mb-4 sm:mb-6 text-sm">
                 <div class="flex items-center gap-2">
                   <User class="w-4 h-4 sm:w-5 sm:h-5" />
@@ -235,9 +269,42 @@ onMounted(() => {
               </div>
 
               <!-- Социальные сети -->
-              <div class="mt-6 sm:mt-8 pt-6 sm:pt-8 border-t">
+              <div
+                v-if="project.link_telegram || project.link_github || project.link_linkedin"
+                class="mt-6 sm:mt-8 pt-6 sm:pt-8 border-t"
+              >
                 <h3 class="mb-3 sm:mb-4">Ссылки</h3>
                 <div class="flex flex-wrap gap-2 sm:gap-3">
+                  <a
+                    v-if="project.link_telegram"
+                    :href="project.link_telegram"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    class="inline-flex items-center gap-2 px-4 py-2 bg-neutral-100 hover:bg-neutral-200 text-neutral-800 rounded-lg transition-colors text-sm font-medium"
+                  >
+                    <Send class="w-4 h-4" />
+                    Telegram
+                  </a>
+                  <a
+                    v-if="project.link_github"
+                    :href="project.link_github"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    class="inline-flex items-center gap-2 px-4 py-2 bg-neutral-100 hover:bg-neutral-200 text-neutral-800 rounded-lg transition-colors text-sm font-medium"
+                  >
+                    <Github class="w-4 h-4" />
+                    GitHub
+                  </a>
+                  <a
+                    v-if="project.link_linkedin"
+                    :href="project.link_linkedin"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    class="inline-flex items-center gap-2 px-4 py-2 bg-neutral-100 hover:bg-neutral-200 text-neutral-800 rounded-lg transition-colors text-sm font-medium"
+                  >
+                    <Linkedin class="w-4 h-4" />
+                    LinkedIn
+                  </a>
                 </div>
               </div>
 
@@ -292,18 +359,58 @@ onMounted(() => {
                 :key="comment.id"
                 class="border-b border-neutral-200 pb-4 sm:pb-6 last:border-0"
               >
-                <div class="flex items-center gap-3 mb-2">
-                  <div class="w-8 h-8 sm:w-10 sm:h-10 bg-gradient-to-br from-blue-500 to-purple-500 rounded-full flex items-center justify-center text-white text-sm">
+                <div class="flex items-start gap-3 mb-2">
+                  <div class="w-8 h-8 sm:w-10 sm:h-10 bg-gradient-to-br from-blue-500 to-purple-500 rounded-full flex items-center justify-center text-white text-sm shrink-0">
                     {{ comment.user?.fio?.charAt(0)?.toUpperCase() || '?' }}
                   </div>
-                  <div>
-                    <div class="font-medium text-sm sm:text-base">{{ comment.user?.fio || 'Аноним' }}</div>
-                    <div class="text-neutral-500 text-xs sm:text-sm">
-                      {{ formatDate(comment.created_at) }}
+                  <div class="flex-1 min-w-0">
+                    <div class="flex items-center justify-between gap-2">
+                      <div>
+                        <div class="font-medium text-sm sm:text-base">{{ comment.user?.fio || 'Аноним' }}</div>
+                        <div class="text-neutral-500 text-xs sm:text-sm">{{ formatDate(comment.created_at) }}</div>
+                      </div>
+                      <div v-if="auth.user && (auth.user.id === comment.user_id || auth.isAdmin)" class="flex gap-1 shrink-0">
+                        <button
+                          v-if="auth.user.id === comment.user_id"
+                          class="p-1 rounded hover:bg-neutral-100 text-neutral-400 hover:text-blue-600 transition-colors"
+                          @click="startEdit(comment)"
+                        >
+                          <Pencil class="w-4 h-4" />
+                        </button>
+                        <button
+                          class="p-1 rounded hover:bg-neutral-100 text-neutral-400 hover:text-red-600 transition-colors"
+                          @click="handleDeleteComment(comment.id)"
+                        >
+                          <Trash2 class="w-4 h-4" />
+                        </button>
+                      </div>
                     </div>
+
+                    <!-- Режим редактирования -->
+                    <div v-if="editingCommentId === comment.id" class="mt-2">
+                      <textarea
+                        v-model="editingContent"
+                        class="w-full border border-neutral-300 rounded-lg p-2 text-sm resize-none focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        rows="3"
+                      />
+                      <div class="flex gap-2 mt-1">
+                        <button
+                          class="flex items-center gap-1 text-xs px-2 py-1 bg-blue-600 text-white rounded hover:bg-blue-700"
+                          @click="saveEdit(comment)"
+                        >
+                          <Check class="w-3 h-3" /> Сохранить
+                        </button>
+                        <button
+                          class="flex items-center gap-1 text-xs px-2 py-1 border border-neutral-300 rounded hover:bg-neutral-50"
+                          @click="cancelEdit"
+                        >
+                          <X class="w-3 h-3" /> Отмена
+                        </button>
+                      </div>
+                    </div>
+                    <p v-else class="text-neutral-700 text-sm sm:text-base mt-1">{{ comment.content }}</p>
                   </div>
                 </div>
-                <p class="text-neutral-700 text-sm sm:text-base ml-10 sm:ml-13">{{ comment.content }}</p>
               </div>
               <div v-if="comments.length === 0" class="text-center py-6 sm:py-8 text-neutral-500">
                 Пока нет комментариев. Будьте первым!

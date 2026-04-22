@@ -61,6 +61,33 @@ func (h *Handler) CreateComment(c *gin.Context) {
 	c.JSON(http.StatusCreated, comment)
 }
 
+// PATCH /api/comments/:id
+func (h *Handler) UpdateComment(c *gin.Context) {
+	var comment model.Comment
+	if err := h.db.First(&comment, c.Param("id")).Error; err != nil {
+		c.JSON(http.StatusNotFound, gin.H{"error": "comment not found"})
+		return
+	}
+
+	uid := h.currentUserID(c)
+	if comment.UserID != uid {
+		c.JSON(http.StatusForbidden, gin.H{"error": "forbidden"})
+		return
+	}
+
+	var input struct {
+		Content string `json:"content" binding:"required,min=1,max=1500"`
+	}
+	if err := c.ShouldBindJSON(&input); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+
+	h.db.Model(&comment).Update("content", input.Content)
+	h.db.Preload("User").First(&comment, comment.ID)
+	c.JSON(http.StatusOK, comment)
+}
+
 // DELETE /api/comments/:id
 func (h *Handler) DeleteComment(c *gin.Context) {
 	var comment model.Comment

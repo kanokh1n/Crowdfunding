@@ -84,6 +84,7 @@ func main() {
 
 		// comments
 		secured.POST("/projects/:id/comments", h.CreateComment)
+		secured.PATCH("/comments/:id", h.UpdateComment)
 		secured.DELETE("/comments/:id", h.DeleteComment)
 
 		// likes
