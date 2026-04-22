@@ -27,6 +27,9 @@ export interface Project {
   goal_amount: number
   current_amount: number
   project_img?: string
+  link_telegram?: string
+  link_github?: string
+  link_linkedin?: string
   status: 'pending_ai' | 'pending_human' | 'active' | 'rejected_ai' | 'rejected' | 'completed' | 'cancelled'
   end_date?: string
   created_at: string
