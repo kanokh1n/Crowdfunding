@@ -44,11 +44,11 @@ function getCategoryName(project: Project): string {
     class="group cursor-pointer bg-white rounded-xl overflow-hidden shadow-sm hover:shadow-xl transition-all duration-300 border border-neutral-200"
     @click="emit('click')"
   >
-    <div class="relative h-48 overflow-hidden">
+    <div class="relative h-48 overflow-hidden bg-neutral-100">
       <ImageWithFallback
         :src="project.project_img"
         :alt="project.title"
-        class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
+        class="w-full h-full object-contain"
       />
       <div class="absolute top-4 left-4 px-3 py-1 bg-white/90 backdrop-blur-sm rounded-full text-xs font-medium">
         {{ getCategoryName(project) }}

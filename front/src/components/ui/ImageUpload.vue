@@ -73,6 +73,7 @@ function clear() {
       <Upload class="w-8 h-8 mx-auto mb-2 text-neutral-400" />
       <p class="text-neutral-600 text-sm">Нажмите или перетащите изображение</p>
       <p class="text-neutral-400 text-xs mt-1">JPG, PNG, WebP, GIF — до 5 МБ</p>
+      <p class="text-neutral-400 text-xs mt-0.5">Рекомендуемый размер: 1280×720 (16:9)</p>
       <div
         v-if="isUploading"
         class="absolute inset-0 flex items-center justify-center bg-white/80 rounded-xl"

@@ -17,7 +17,9 @@ func (h *Handler) ListProjects(c *gin.Context) {
 	page, limit := paginate(c)
 	offset := (page - 1) * limit
 
-	query := h.db.Model(&model.Project{}).Preload("User").Preload("Categories")
+	query := h.db.Model(&model.Project{}).Preload("User").Preload("Categories").Preload("Images", func(db *gorm.DB) *gorm.DB {
+		return db.Order("position ASC")
+	})
 
 	// По умолчанию публичный список — только одобренные проекты
 	status := c.Query("status")
@@ -76,7 +78,9 @@ func (h *Handler) ListProjects(c *gin.Context) {
 // GET /api/projects/:id
 func (h *Handler) GetProject(c *gin.Context) {
 	var project model.Project
-	err := h.db.Preload("User").Preload("Categories").First(&project, c.Param("id")).Error
+	err := h.db.Preload("User").Preload("Categories").Preload("Images", func(db *gorm.DB) *gorm.DB {
+		return db.Order("position ASC")
+	}).First(&project, c.Param("id")).Error
 	if err != nil {
 		c.JSON(http.StatusNotFound, gin.H{"error": "project not found"})
 		return
@@ -94,6 +98,7 @@ func (h *Handler) CreateProject(c *gin.Context) {
 		EndDate      *time.Time `json:"end_date"`
 		CategoryIDs  []uint     `json:"category_ids"`
 		ProjectImg   string     `json:"project_img"`
+		Images       []string   `json:"images"`
 		RoadmapFile  string     `json:"roadmap_file"`
 		LinkTelegram string     `json:"link_telegram" binding:"omitempty,url"`
 		LinkGithub   string     `json:"link_github"   binding:"omitempty,url"`
@@ -129,9 +134,18 @@ func (h *Handler) CreateProject(c *gin.Context) {
 		return
 	}
 
+	for i, url := range input.Images {
+		if i >= 5 {
+			break
+		}
+		h.db.Create(&model.ProjectImage{ProjectID: project.ID, URL: url, Position: i})
+	}
+
 	go h.runAICheckAsync(project.ID)
 
-	h.db.Preload("User").Preload("Categories").First(&project, project.ID)
+	h.db.Preload("User").Preload("Categories").Preload("Images", func(db *gorm.DB) *gorm.DB {
+		return db.Order("position ASC")
+	}).First(&project, project.ID)
 	c.JSON(http.StatusCreated, project)
 }
 
@@ -156,6 +170,7 @@ func (h *Handler) UpdateProject(c *gin.Context) {
 		GoalAmount   *float64             `json:"goal_amount"   binding:"omitempty,gt=0"`
 		EndDate      *time.Time           `json:"end_date"`
 		ProjectImg   *string              `json:"project_img"`
+		Images       []string             `json:"images"`
 		Status       *model.ProjectStatus `json:"status"`
 		CategoryIDs  []uint               `json:"category_ids"`
 		LinkTelegram *string              `json:"link_telegram" binding:"omitempty,url"`
@@ -206,7 +221,19 @@ func (h *Handler) UpdateProject(c *gin.Context) {
 		h.db.Model(&project).Association("Categories").Replace(categories)
 	}
 
-	h.db.Preload("User").Preload("Categories").First(&project, project.ID)
+	if input.Images != nil {
+		h.db.Where("project_id = ?", project.ID).Delete(&model.ProjectImage{})
+		for i, url := range input.Images {
+			if i >= 5 {
+				break
+			}
+			h.db.Create(&model.ProjectImage{ProjectID: project.ID, URL: url, Position: i})
+		}
+	}
+
+	h.db.Preload("User").Preload("Categories").Preload("Images", func(db *gorm.DB) *gorm.DB {
+		return db.Order("position ASC")
+	}).First(&project, project.ID)
 	h.db.Model(&model.Like{}).Where("project_id = ?", project.ID).Count(&project.LikesCount)
 	c.JSON(http.StatusOK, project)
 }

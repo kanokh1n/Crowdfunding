@@ -100,6 +100,13 @@ type Category struct {
 
 // ─── Project ──────────────────────────────────────────────────────────────────
 
+type ProjectImage struct {
+	ID        uint   `gorm:"primaryKey"         json:"id"`
+	ProjectID uint   `gorm:"not null;index"     json:"project_id"`
+	URL       string `gorm:"not null"           json:"url"`
+	Position  int    `gorm:"default:0"          json:"position"`
+}
+
 type Project struct {
 	ID            uint               `gorm:"primaryKey"                   json:"id"`
 	UserID        uint               `gorm:"not null"                     json:"user_id"`
@@ -114,6 +121,7 @@ type Project struct {
 	LinkGithub    string             `                                    json:"link_github"`
 	LinkLinkedin  string             `                                    json:"link_linkedin"`
 	Status        ProjectStatus      `gorm:"default:'pending_ai'"         json:"status"`
+	Images        []ProjectImage     `gorm:"foreignKey:ProjectID;constraint:OnDelete:CASCADE" json:"images,omitempty"`
 	Moderation    *ProjectModeration `gorm:"foreignKey:ProjectID"     json:"moderation,omitempty"`
 	EndDate       *time.Time         `                                    json:"end_date"`
 	Categories    []Category         `gorm:"many2many:project_categories" json:"categories,omitempty"`

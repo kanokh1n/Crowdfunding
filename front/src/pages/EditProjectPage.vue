@@ -5,7 +5,7 @@ import Button from '@/components/ui/Button.vue'
 import Input from '@/components/ui/Input.vue'
 import Label from '@/components/ui/Label.vue'
 import Textarea from '@/components/ui/Textarea.vue'
-import ImageUpload from '@/components/ui/ImageUpload.vue'
+import MultiImageUpload from '@/components/ui/MultiImageUpload.vue'
 import { ArrowLeft } from 'lucide-vue-next'
 import * as projectApi from '@/api/projects'
 import * as adminApi from '@/api/admin'
@@ -24,7 +24,7 @@ const title = ref('')
 const description = ref('')
 const goalAmount = ref('')
 const endDate = ref('')
-const projectImg = ref('')
+const projectImages = ref<string[]>([])
 const categoryIds = ref<number[]>([])
 
 const socialLinks = ref({
@@ -43,7 +43,7 @@ async function loadData() {
     description.value = project.description
     goalAmount.value = String(project.goal_amount)
     endDate.value = project.end_date ? project.end_date.slice(0, 10) : ''
-    projectImg.value = project.project_img ?? ''
+    projectImages.value = project.images?.map(i => i.url) ?? (project.project_img ? [project.project_img] : [])
     categoryIds.value = project.categories?.map(c => c.id) ?? []
     categories.value = cats
     socialLinks.value.telegram = project.link_telegram || ''
@@ -64,7 +64,8 @@ async function handleSubmit() {
       description: description.value,
       goal_amount: parseFloat(goalAmount.value),
       end_date: endDate.value ? new Date(endDate.value).toISOString() : undefined,
-      project_img: projectImg.value || undefined,
+      project_img: projectImages.value[0] || undefined,
+      images: projectImages.value,
       category_ids: categoryIds.value,
       link_telegram: socialLinks.value.telegram || undefined,
       link_github: socialLinks.value.github || undefined,
@@ -168,10 +169,10 @@ onMounted(() => {
             />
           </div>
 
-          <!-- Изображение -->
+          <!-- Изображения -->
           <div class="space-y-2">
-            <Label>Изображение проекта</Label>
-            <ImageUpload v-model="projectImg" />
+            <Label>Изображения проекта <span class="text-neutral-400 font-normal text-xs">(до 5 штук, первое — главное)</span></Label>
+            <MultiImageUpload v-model="projectImages" />
           </div>
 
           <!-- Соцсети -->

@@ -6,7 +6,7 @@ import Input from '@/components/ui/Input.vue'
 import Label from '@/components/ui/Label.vue'
 import Textarea from '@/components/ui/Textarea.vue'
 import Select from '@/components/ui/Select.vue'
-import ImageUpload from '@/components/ui/ImageUpload.vue'
+import MultiImageUpload from '@/components/ui/MultiImageUpload.vue'
 import DocumentUpload from '@/components/ui/DocumentUpload.vue'
 import type { SelectOption } from '@/components/ui/Select.vue'
 import { ArrowLeft } from 'lucide-vue-next'
@@ -24,7 +24,7 @@ const categoryId = ref<number | null>(null)
 const description = ref('')
 const goalAmount = ref('')
 const endDate = ref('')
-const projectImg = ref('')
+const projectImages = ref<string[]>([])
 const roadmapFile = ref('')
 const roadmapFileName = ref('')
 
@@ -52,7 +52,8 @@ async function handleSubmit() {
       description: description.value,
       goal_amount: parseFloat(goalAmount.value),
       end_date: endDate.value ? new Date(endDate.value).toISOString() : undefined,
-      project_img: projectImg.value || undefined,
+      project_img: projectImages.value[0] || undefined,
+      images: projectImages.value.length > 0 ? projectImages.value : undefined,
       roadmap_file: roadmapFile.value || undefined,
       category_ids: categoryId.value ? [categoryId.value] : undefined,
       link_telegram: socialLinks.value.telegram || undefined,
@@ -156,10 +157,10 @@ onMounted(() => {
             />
           </div>
 
-          <!-- Изображение -->
+          <!-- Изображения -->
           <div class="space-y-2">
-            <Label>Изображение проекта</Label>
-            <ImageUpload v-model="projectImg" />
+            <Label>Изображения проекта <span class="text-neutral-400 font-normal text-xs">(до 5 штук, первое — главное)</span></Label>
+            <MultiImageUpload v-model="projectImages" />
           </div>
 
           <!-- Roadmap -->

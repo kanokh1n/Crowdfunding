@@ -18,6 +18,14 @@ export interface Category {
   title: string
 }
 
+// ProjectImage
+export interface ProjectImage {
+  id: number
+  project_id: number
+  url: string
+  position: number
+}
+
 // Project
 export interface Project {
   id: number
@@ -38,6 +46,7 @@ export interface Project {
   // Relations (included in API responses)
   user?: User
   categories?: Category[]
+  images?: ProjectImage[]
   likes_count?: number
   is_liked?: boolean
 }
@@ -135,6 +144,7 @@ export interface CreateProjectInput {
   goal_amount: number
   end_date?: string
   project_img?: string
+  images?: string[]
   roadmap_file?: string
   category_ids?: number[]
   link_telegram?: string

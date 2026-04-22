@@ -31,6 +31,7 @@ func main() {
 		&model.Like{},
 		&model.Message{},
 		&model.Notification{},
+		&model.ProjectImage{},
 	); err != nil {
 		log.Fatalf("migration failed: %v", err)
 	}

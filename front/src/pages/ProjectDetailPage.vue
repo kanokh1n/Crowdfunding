@@ -28,6 +28,7 @@ const donationAmount = ref('')
 const isLoading = ref(true)
 const submitError = ref('')
 const isLiked = ref(false)
+const activeImageIndex = ref(0)
 
 const projectId = computed(() => parseInt(props.id))
 
@@ -47,6 +48,16 @@ const canEdit = computed(() => {
   if (!auth.user || !project.value) return false
   return auth.user.role === 'admin' || auth.user.id === project.value.user_id
 })
+
+const galleryImages = computed(() => {
+  if (!project.value) return []
+  if (project.value.images && project.value.images.length > 0) {
+    return project.value.images.map(i => i.url)
+  }
+  return project.value.project_img ? [project.value.project_img] : []
+})
+
+const activeImage = computed(() => galleryImages.value[activeImageIndex.value] ?? project.value?.project_img)
 
 async function loadData() {
   isLoading.value = true
@@ -215,13 +226,13 @@ onMounted(() => {
       <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 sm:gap-8">
         <!-- Основной контент -->
         <div class="lg:col-span-2 space-y-6 sm:space-y-8">
-          <!-- Изображение -->
+          <!-- Галерея -->
           <div class="bg-white rounded-xl shadow-lg overflow-hidden border border-neutral-200">
-            <div class="relative h-64 sm:h-80 lg:h-96">
+            <div class="relative h-64 sm:h-80 lg:h-96 bg-neutral-100">
               <ImageWithFallback
-                :src="project.project_img"
+                :src="activeImage"
                 :alt="project.title"
-                class="w-full h-full object-cover"
+                class="w-full h-full object-contain"
               />
               <div class="absolute top-4 left-4 px-3 sm:px-4 py-1.5 sm:py-2 bg-white/90 backdrop-blur-sm rounded-full text-xs sm:text-sm">
                 {{ project.categories?.map(c => c.title).join(', ') || 'Без категории' }}
@@ -245,6 +256,19 @@ onMounted(() => {
                   class="w-5 h-5 sm:w-6 sm:h-6"
                   :class="isLiked ? 'text-red-500 fill-red-500' : 'text-neutral-600'"
                 />
+              </button>
+            </div>
+            <!-- Миниатюры -->
+            <div v-if="galleryImages.length > 1" class="flex gap-2 p-3 bg-neutral-50 border-t border-neutral-100 overflow-x-auto scrollbar-hide">
+              <button
+                v-for="(url, i) in galleryImages"
+                :key="url"
+                type="button"
+                class="shrink-0 w-16 h-16 rounded-lg overflow-hidden border-2 transition-all"
+                :class="i === activeImageIndex ? 'border-blue-500' : 'border-transparent hover:border-neutral-300'"
+                @click="activeImageIndex = i"
+              >
+                <img :src="url" :alt="`Фото ${i + 1}`" class="w-full h-full object-contain bg-neutral-100" />
               </button>
             </div>
 
