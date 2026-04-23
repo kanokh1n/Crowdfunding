@@ -75,9 +75,11 @@ func main() {
 		secured.GET("/users/:id", h.GetUser)
 
 		// projects
+		secured.GET("/projects/:id/stats", h.GetProjectStats)
 		secured.POST("/projects", h.CreateProject)
 		secured.PATCH("/projects/:id", h.UpdateProject)
 		secured.DELETE("/projects/:id", h.DeleteProject)
+
 
 		// pledges
 		secured.POST("/projects/:id/pledges", h.CreatePledge)
