@@ -94,6 +94,47 @@ function logoutAndRedirect() {
   window.location.href = '/auth'
 }
 
+const STATUS_MESSAGES: Record<number, string> = {
+  400: 'Некорректный запрос. Проверьте введённые данные.',
+  401: 'Сессия истекла. Пожалуйста, войдите снова.',
+  403: 'У вас нет прав для этого действия.',
+  404: 'Запрашиваемый ресурс не найден.',
+  409: 'Конфликт данных. Возможно, такая запись уже существует.',
+  413: 'Файл слишком большой.',
+  422: 'Ошибка валидации. Проверьте правильность данных.',
+  429: 'Слишком много запросов. Подождите немного.',
+  500: 'Внутренняя ошибка сервера. Попробуйте позже.',
+  502: 'Сервер временно недоступен.',
+  503: 'Сервис недоступен. Попробуйте позже.',
+}
+
+const BACKEND_MESSAGES: Record<string, string> = {
+  'email already exists':                    'Пользователь с таким email уже зарегистрирован.',
+  'invalid credentials':                     'Неверный email или пароль.',
+  'invalid token':                           'Недействительный токен. Войдите снова.',
+  'token expired':                           'Токен истёк. Войдите снова.',
+  'project not found':                       'Проект не найден.',
+  'user not found':                          'Пользователь не найден.',
+  'comment not found':                       'Комментарий не найден.',
+  'forbidden':                               'У вас нет прав для этого действия.',
+  'unauthorized':                            'Необходима авторизация.',
+  'file required':                           'Файл не выбран.',
+  'file too large (max 5mb)':               'Файл слишком большой. Максимум 5 МБ.',
+  'file too large (max 20mb)':              'Файл слишком большой. Максимум 20 МБ.',
+  'unsupported format, use jpg/png/webp/gif': 'Неподдерживаемый формат. Используйте JPG, PNG, WebP или GIF.',
+  'unsupported format, use pdf or pptx':    'Неподдерживаемый формат. Используйте PDF или PPTX.',
+  'failed to create project':               'Не удалось создать проект. Попробуйте позже.',
+  'failed to fetch projects':               'Не удалось загрузить проекты.',
+  'failed to save file':                    'Не удалось сохранить файл.',
+  'storage error':                          'Ошибка хранилища файлов.',
+  'already liked':                          'Вы уже поддержали этот проект.',
+  'not liked':                              'Вы ещё не поддерживали этот проект.',
+  'insufficient funds':                     'Недостаточно средств.',
+  'invalid amount':                         'Некорректная сумма.',
+  'project is not active':                  'Проект не активен.',
+  'email not verified':                     'Email не подтверждён. Проверьте почту.',
+}
+
 class ApiError extends Error {
   constructor(
     public status: number,
@@ -101,6 +142,21 @@ class ApiError extends Error {
   ) {
     super(`API Error: ${status}`)
     this.name = 'ApiError'
+  }
+
+  get userMessage(): string {
+    const raw = (this.data as Record<string, string> | null)?.error
+    if (raw) {
+      const key = raw.toLowerCase().trim()
+      if (BACKEND_MESSAGES[key]) return BACKEND_MESSAGES[key]
+      // Частичное совпадение для длинных сообщений с деталями
+      for (const [pattern, msg] of Object.entries(BACKEND_MESSAGES)) {
+        if (key.includes(pattern)) return msg
+      }
+      // Если бэкенд прислал читаемое сообщение — показываем его
+      if (raw.length < 120) return raw
+    }
+    return STATUS_MESSAGES[this.status] ?? 'Произошла непредвиденная ошибка. Попробуйте позже.'
   }
 }
 

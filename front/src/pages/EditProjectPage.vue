@@ -10,17 +10,20 @@ import { ArrowLeft } from 'lucide-vue-next'
 import * as projectApi from '@/api/projects'
 import * as adminApi from '@/api/admin'
 import type { Category } from '@/types'
+import { useErrorToast } from '@/composables/useErrorToast'
 
 const props = defineProps<{
   id: string
 }>()
 
 const router = useRouter()
+const { showError, showSuccess } = useErrorToast()
 const isLoading = ref(false)
 const submitError = ref('')
 const categories = ref<Category[]>([])
 
 const title = ref('')
+const shortDescription = ref('')
 const description = ref('')
 const goalAmount = ref('')
 const endDate = ref('')
@@ -40,6 +43,7 @@ async function loadData() {
       adminApi.listCategories(),
     ])
     title.value = project.title
+    shortDescription.value = project.short_description ?? ''
     description.value = project.description
     goalAmount.value = String(project.goal_amount)
     endDate.value = project.end_date ? project.end_date.slice(0, 10) : ''
@@ -49,7 +53,8 @@ async function loadData() {
     socialLinks.value.telegram = project.link_telegram || ''
     socialLinks.value.github = project.link_github || ''
     socialLinks.value.linkedin = project.link_linkedin || ''
-  } catch {
+  } catch (err) {
+    showError(err)
     submitError.value = 'Не удалось загрузить проект'
   }
 }
@@ -61,6 +66,7 @@ async function handleSubmit() {
   try {
     await projectApi.updateProject(parseInt(props.id), {
       title: title.value,
+      short_description: shortDescription.value || undefined,
       description: description.value,
       goal_amount: parseFloat(goalAmount.value),
       end_date: endDate.value ? new Date(endDate.value).toISOString() : undefined,
@@ -71,9 +77,11 @@ async function handleSubmit() {
       link_github: socialLinks.value.github || undefined,
       link_linkedin: socialLinks.value.linkedin || undefined,
     })
+    showSuccess('Изменения успешно сохранены!')
     router.push({ name: 'project-detail', params: { id: props.id } })
   } catch (err: any) {
-    submitError.value = err.message || 'Ошибка сохранения проекта'
+    showError(err)
+    submitError.value = err.userMessage ?? err.message ?? 'Ошибка сохранения проекта'
   } finally {
     isLoading.value = false
   }
@@ -119,25 +127,22 @@ onMounted(() => {
 
           <!-- Краткое описание -->
           <div class="space-y-2">
-            <Label for="description">Краткое описание *</Label>
+            <Label for="shortDescription">Краткое описание <span class="text-neutral-400 font-normal text-xs">(выводится на карточке, до 200 символов)</span></Label>
             <Textarea
-              id="description"
-              v-model="description"
-              placeholder="Краткое описание проекта (до 200 символов)"
-              :rows="3"
+              id="shortDescription"
+              v-model="shortDescription"
+              placeholder="Одно-два предложения о том, что делает ваш проект"
+              :rows="2"
               :maxlength="200"
-              required
             />
-            <div class="text-neutral-500 text-right text-sm">
-              {{ description.length }}/200
-            </div>
+            <div class="text-neutral-400 text-right text-xs">{{ shortDescription.length }}/200</div>
           </div>
 
           <!-- Полное описание -->
           <div class="space-y-2">
-            <Label for="fullDescription">Полное описание *</Label>
+            <Label for="description">Полное описание *</Label>
             <Textarea
-              id="fullDescription"
+              id="description"
               v-model="description"
               placeholder="Подробное описание проекта, его целей и особенностей"
               :rows="8"

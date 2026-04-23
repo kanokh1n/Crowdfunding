@@ -31,6 +31,7 @@ export interface Project {
   id: number
   user_id: number
   title: string
+  short_description?: string
   description: string
   goal_amount: number
   current_amount: number
@@ -140,6 +141,7 @@ export interface PaginatedResponse<T> {
 // Project creation/update
 export interface CreateProjectInput {
   title: string
+  short_description?: string
   description?: string
   goal_amount: number
   end_date?: string

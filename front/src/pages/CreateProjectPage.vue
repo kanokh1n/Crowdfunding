@@ -13,14 +13,17 @@ import { ArrowLeft } from 'lucide-vue-next'
 import * as projectApi from '@/api/projects'
 import * as adminApi from '@/api/admin'
 import type { Category } from '@/types'
+import { useErrorToast } from '@/composables/useErrorToast'
 
 const router = useRouter()
+const { showError, showSuccess } = useErrorToast()
 const categories = ref<Category[]>([])
 const isLoading = ref(false)
 const submitError = ref('')
 
 const title = ref('')
 const categoryId = ref<number | null>(null)
+const shortDescription = ref('')
 const description = ref('')
 const goalAmount = ref('')
 const endDate = ref('')
@@ -49,6 +52,7 @@ async function handleSubmit() {
   try {
     await projectApi.createProject({
       title: title.value,
+      short_description: shortDescription.value || undefined,
       description: description.value,
       goal_amount: parseFloat(goalAmount.value),
       end_date: endDate.value ? new Date(endDate.value).toISOString() : undefined,
@@ -60,9 +64,11 @@ async function handleSubmit() {
       link_github: socialLinks.value.github || undefined,
       link_linkedin: socialLinks.value.linkedin || undefined,
     })
+    showSuccess('Проект успешно создан и отправлен на проверку!')
     router.push({ name: 'home' })
   } catch (err: any) {
-    submitError.value = err.message || 'Ошибка создания проекта'
+    showError(err)
+    submitError.value = err.userMessage ?? err.message ?? 'Ошибка создания проекта'
   } finally {
     isLoading.value = false
   }
@@ -121,9 +127,22 @@ onMounted(() => {
             />
           </div>
 
-          <!-- Описание -->
+          <!-- Краткое описание -->
           <div class="space-y-2">
-            <Label for="description">Описание *</Label>
+            <Label for="shortDescription">Краткое описание <span class="text-neutral-400 font-normal text-xs">(выводится на карточке, до 200 символов)</span></Label>
+            <Textarea
+              id="shortDescription"
+              v-model="shortDescription"
+              placeholder="Одно-два предложения о том, что делает ваш проект"
+              :rows="2"
+              :maxlength="200"
+            />
+            <div class="text-neutral-400 text-right text-xs">{{ shortDescription.length }}/200</div>
+          </div>
+
+          <!-- Полное описание -->
+          <div class="space-y-2">
+            <Label for="description">Полное описание *</Label>
             <Textarea
               id="description"
               v-model="description"

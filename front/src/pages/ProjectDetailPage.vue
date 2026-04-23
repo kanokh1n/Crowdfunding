@@ -13,6 +13,7 @@ import {
 } from 'lucide-vue-next'
 import * as projectApi from '@/api/projects'
 import type { Project, Comment as CommentType } from '@/types'
+import { useErrorToast } from '@/composables/useErrorToast'
 
 const props = defineProps<{
   id: string
@@ -20,6 +21,7 @@ const props = defineProps<{
 
 const router = useRouter()
 const auth = useAuthStore()
+const { showError, showSuccess } = useErrorToast()
 
 const project = ref<Project | null>(null)
 const comments = ref<CommentType[]>([])
@@ -70,7 +72,7 @@ async function loadData() {
     comments.value = commentsData
     isLiked.value = projectData.is_liked || false
   } catch (err) {
-    console.error('Failed to load project:', err)
+    showError(err)
   } finally {
     isLoading.value = false
   }
@@ -84,7 +86,8 @@ async function handleAddComment() {
     comments.value.unshift(newComment)
     commentText.value = ''
   } catch (err: any) {
-    submitError.value = err.message || 'Ошибка отправки комментария'
+    showError(err)
+    submitError.value = err.userMessage ?? err.message ?? 'Ошибка отправки комментария'
   }
 }
 
@@ -109,7 +112,7 @@ async function saveEdit(comment: CommentType) {
     if (idx !== -1) comments.value[idx] = updated
     cancelEdit()
   } catch (err: any) {
-    submitError.value = err.message || 'Ошибка редактирования'
+    showError(err)
   }
 }
 
@@ -118,12 +121,9 @@ async function handleDeleteComment(commentId: number) {
     await projectApi.deleteComment(commentId)
     comments.value = comments.value.filter(c => c.id !== commentId)
   } catch (err: any) {
-    submitError.value = err.message || 'Ошибка удаления'
+    showError(err)
   }
 }
-
-const showSuccess = ref(false)
-const successMessage = ref('')
 
 async function handleDonate() {
   if (!donationAmount.value) return
@@ -131,16 +131,12 @@ async function handleDonate() {
   try {
     const amount = parseFloat(donationAmount.value)
     await projectApi.createPledge(projectId.value, amount)
-    // Reload project to get updated amount
     project.value = await projectApi.getProject(projectId.value)
     donationAmount.value = ''
-
-    // In-app toast notification
-    successMessage.value = `Спасибо за поддержку! Вы поддержали проект на ${amount.toLocaleString('ru-RU')} ₽`
-    showSuccess.value = true
-    setTimeout(() => { showSuccess.value = false }, 4000)
+    showSuccess(`Спасибо за поддержку! Вы поддержали проект на ${amount.toLocaleString('ru-RU')} ₽`)
   } catch (err: any) {
-    submitError.value = err.message || 'Ошибка поддержки проекта'
+    showError(err)
+    submitError.value = err.userMessage ?? err.message ?? 'Ошибка поддержки проекта'
   }
 }
 
@@ -159,7 +155,7 @@ async function handleLike() {
     }
     project.value = await projectApi.getProject(projectId.value)
   } catch (err) {
-    console.error('Like error:', err)
+    showError(err)
   }
 }
 
@@ -189,28 +185,6 @@ onMounted(() => {
 </script>
 
 <template>
-  <!-- Toast notification -->
-  <Transition name="toast">
-    <div
-      v-if="showSuccess"
-      class="fixed top-20 right-4 sm:right-6 z-[9999] max-w-sm shadow-lg rounded-xl border border-green-200 bg-white px-4 py-3 flex items-start gap-3"
-    >
-      <div class="flex-shrink-0 w-8 h-8 rounded-full bg-green-100 flex items-center justify-center">
-        <svg class="w-5 h-5 text-green-600" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-          <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7" />
-        </svg>
-      </div>
-      <div class="flex-1 min-w-0">
-        <div class="text-sm font-medium text-neutral-900">IT Crowdfunding</div>
-        <div class="text-sm text-neutral-600">{{ successMessage }}</div>
-      </div>
-      <button @click="showSuccess = false" class="flex-shrink-0 text-neutral-400 hover:text-neutral-600">
-        <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-          <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
-        </svg>
-      </button>
-    </div>
-  </Transition>
 
   <div v-if="isLoading" class="min-h-screen flex items-center justify-center">
     <div class="text-neutral-400">Загрузка проекта...</div>

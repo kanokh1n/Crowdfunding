@@ -31,12 +31,13 @@ function formatAmount(amount: number) {
   return amount.toLocaleString('ru-RU')
 }
 
-function getCategoryName(project: Project): string {
-  if (project.categories && project.categories.length > 0) {
-    return project.categories.map(c => c.title).join(', ')
-  }
-  return 'Без категории'
-}
+const visibleCategories = computed(() =>
+  props.project.categories?.slice(0, 3) ?? []
+)
+
+const hiddenCount = computed(() =>
+  Math.max((props.project.categories?.length ?? 0) - 3, 0)
+)
 </script>
 
 <template>
@@ -50,9 +51,6 @@ function getCategoryName(project: Project): string {
         :alt="project.title"
         class="w-full h-full object-contain"
       />
-      <div class="absolute top-4 left-4 px-3 py-1 bg-white/90 backdrop-blur-sm rounded-full text-xs font-medium">
-        {{ getCategoryName(project) }}
-      </div>
       <div class="absolute top-4 right-4 px-3 py-1 bg-green-500 text-white rounded-full flex items-center gap-1 text-xs">
         <TrendingUp class="w-4 h-4" />
         {{ Math.floor(progress) }}%
@@ -64,7 +62,7 @@ function getCategoryName(project: Project): string {
         {{ project.title }}
       </h3>
       <p class="text-neutral-600 mb-4 line-clamp-2 text-sm">
-        {{ project.description }}
+        {{ project.short_description || project.description }}
       </p>
 
       <div class="space-y-3 mb-4">
@@ -92,6 +90,23 @@ function getCategoryName(project: Project): string {
             <span>{{ project.user?.fio || 'Аноним' }}</span>
           </div>
         </div>
+      </div>
+
+      <div class="flex flex-wrap gap-1.5 pt-3 border-t border-neutral-100">
+        <span
+          v-for="cat in visibleCategories"
+          :key="cat.id"
+          class="px-2.5 py-0.5 bg-neutral-100 text-neutral-600 rounded-full text-xs"
+        >
+          {{ cat.title }}
+        </span>
+        <span
+          v-if="hiddenCount > 0"
+          class="px-2.5 py-0.5 bg-neutral-100 text-neutral-400 rounded-full text-xs"
+        >
+          +{{ hiddenCount }}
+        </span>
+        <span v-if="!project.categories?.length" class="text-xs text-neutral-400">Без категории</span>
       </div>
     </div>
   </div>

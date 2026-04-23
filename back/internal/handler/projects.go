@@ -92,17 +92,18 @@ func (h *Handler) GetProject(c *gin.Context) {
 // POST /api/projects
 func (h *Handler) CreateProject(c *gin.Context) {
 	var input struct {
-		Title        string     `json:"title"         binding:"required"`
-		Description  string     `json:"description"`
-		GoalAmount   float64    `json:"goal_amount"   binding:"required,gt=0"`
-		EndDate      *time.Time `json:"end_date"`
-		CategoryIDs  []uint     `json:"category_ids"`
-		ProjectImg   string     `json:"project_img"`
-		Images       []string   `json:"images"`
-		RoadmapFile  string     `json:"roadmap_file"`
-		LinkTelegram string     `json:"link_telegram" binding:"omitempty,url"`
-		LinkGithub   string     `json:"link_github"   binding:"omitempty,url"`
-		LinkLinkedin string     `json:"link_linkedin" binding:"omitempty,url"`
+		Title            string     `json:"title"              binding:"required"`
+		ShortDescription string     `json:"short_description"`
+		Description      string     `json:"description"`
+		GoalAmount       float64    `json:"goal_amount"        binding:"required,gt=0"`
+		EndDate          *time.Time `json:"end_date"`
+		CategoryIDs      []uint     `json:"category_ids"`
+		ProjectImg       string     `json:"project_img"`
+		Images           []string   `json:"images"`
+		RoadmapFile      string     `json:"roadmap_file"`
+		LinkTelegram     string     `json:"link_telegram"      binding:"omitempty,url"`
+		LinkGithub       string     `json:"link_github"        binding:"omitempty,url"`
+		LinkLinkedin     string     `json:"link_linkedin"      binding:"omitempty,url"`
 	}
 	if err := c.ShouldBindJSON(&input); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
@@ -110,17 +111,18 @@ func (h *Handler) CreateProject(c *gin.Context) {
 	}
 
 	project := model.Project{
-		UserID:       h.currentUserID(c),
-		Title:        input.Title,
-		Description:  input.Description,
-		GoalAmount:   input.GoalAmount,
-		EndDate:      input.EndDate,
-		ProjectImg:   input.ProjectImg,
-		RoadmapFile:  input.RoadmapFile,
-		LinkTelegram: input.LinkTelegram,
-		LinkGithub:   input.LinkGithub,
-		LinkLinkedin: input.LinkLinkedin,
-		Status:       model.StatusPendingAI,
+		UserID:           h.currentUserID(c),
+		Title:            input.Title,
+		ShortDescription: input.ShortDescription,
+		Description:      input.Description,
+		GoalAmount:       input.GoalAmount,
+		EndDate:          input.EndDate,
+		ProjectImg:       input.ProjectImg,
+		RoadmapFile:      input.RoadmapFile,
+		LinkTelegram:     input.LinkTelegram,
+		LinkGithub:       input.LinkGithub,
+		LinkLinkedin:     input.LinkLinkedin,
+		Status:           model.StatusPendingAI,
 	}
 
 	if len(input.CategoryIDs) > 0 {
@@ -165,17 +167,18 @@ func (h *Handler) UpdateProject(c *gin.Context) {
 	}
 
 	var input struct {
-		Title        *string              `json:"title"`
-		Description  *string              `json:"description"`
-		GoalAmount   *float64             `json:"goal_amount"   binding:"omitempty,gt=0"`
-		EndDate      *time.Time           `json:"end_date"`
-		ProjectImg   *string              `json:"project_img"`
-		Images       []string             `json:"images"`
-		Status       *model.ProjectStatus `json:"status"`
-		CategoryIDs  []uint               `json:"category_ids"`
-		LinkTelegram *string              `json:"link_telegram" binding:"omitempty,url"`
-		LinkGithub   *string              `json:"link_github"   binding:"omitempty,url"`
-		LinkLinkedin *string              `json:"link_linkedin" binding:"omitempty,url"`
+		Title            *string              `json:"title"`
+		ShortDescription *string              `json:"short_description"`
+		Description      *string              `json:"description"`
+		GoalAmount       *float64             `json:"goal_amount"        binding:"omitempty,gt=0"`
+		EndDate          *time.Time           `json:"end_date"`
+		ProjectImg       *string              `json:"project_img"`
+		Images           []string             `json:"images"`
+		Status           *model.ProjectStatus `json:"status"`
+		CategoryIDs      []uint               `json:"category_ids"`
+		LinkTelegram     *string              `json:"link_telegram"      binding:"omitempty,url"`
+		LinkGithub       *string              `json:"link_github"        binding:"omitempty,url"`
+		LinkLinkedin     *string              `json:"link_linkedin"      binding:"omitempty,url"`
 	}
 	if err := c.ShouldBindJSON(&input); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
@@ -185,6 +188,9 @@ func (h *Handler) UpdateProject(c *gin.Context) {
 	updates := map[string]any{}
 	if input.Title != nil {
 		updates["title"] = *input.Title
+	}
+	if input.ShortDescription != nil {
+		updates["short_description"] = *input.ShortDescription
 	}
 	if input.Description != nil {
 		updates["description"] = *input.Description

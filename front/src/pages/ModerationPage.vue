@@ -7,7 +7,9 @@ import { Check, X, ShieldCheck, Mail, FileText } from 'lucide-vue-next'
 import * as adminApi from '@/api/admin'
 import * as notifApi from '@/api/notifications'
 import type { Project } from '@/types'
+import { useErrorToast } from '@/composables/useErrorToast'
 
+const { showError, showSuccess } = useErrorToast()
 const projects = ref<Project[]>([])
 const isLoading = ref(true)
 const loadError = ref('')
@@ -24,6 +26,9 @@ async function handleInvite(projectId: number) {
     await notifApi.sendInvite(projectId, msg)
     inviteOpen.value[projectId] = false
     inviteMessage.value[projectId] = ''
+    showSuccess('Приглашение отправлено')
+  } catch (err) {
+    showError(err)
   } finally {
     inviteLoading.value[projectId] = false
   }
@@ -34,8 +39,8 @@ async function loadProjects() {
   try {
     projects.value = await adminApi.getModerationQueue()
   } catch (err: any) {
-    loadError.value = err?.data?.error || err?.message || 'Ошибка загрузки'
-    console.error('Failed to load moderation queue:', err)
+    loadError.value = err?.userMessage ?? err?.data?.error ?? err?.message ?? 'Ошибка загрузки'
+    showError(err)
   } finally {
     isLoading.value = false
   }
@@ -47,8 +52,9 @@ async function handleModerate(projectId: number, decision: 'approve' | 'reject')
     await adminApi.moderationDecision(projectId, { decision })
     // Remove from list
     projects.value = projects.value.filter(p => p.id !== projectId)
+    showSuccess(decision === 'approve' ? 'Проект одобрен' : 'Проект отклонён')
   } catch (err: any) {
-    console.error('Moderation error:', err)
+    showError(err)
   } finally {
     actionLoading.value[projectId] = false
   }
@@ -115,11 +121,21 @@ onMounted(() => {
               <!-- Контент -->
               <div class="md:col-span-2 p-4 sm:p-6">
                 <div class="mb-3 sm:mb-4">
-                  <div class="inline-block px-2.5 sm:px-3 py-1 bg-neutral-100 rounded-full mb-2 sm:mb-3 text-xs sm:text-sm">
-                    {{ project.categories?.map(c => c.title).join(', ') || 'Без категории' }}
+                  <div class="flex flex-wrap gap-1.5 mb-2 sm:mb-3">
+                    <span
+                      v-if="project.categories?.length"
+                      v-for="cat in project.categories"
+                      :key="cat.id"
+                      class="px-2.5 py-0.5 bg-neutral-100 text-neutral-600 rounded-full text-xs"
+                    >
+                      {{ cat.title }}
+                    </span>
+                    <span v-else class="px-2.5 py-0.5 bg-neutral-100 text-neutral-400 rounded-full text-xs">
+                      Без категории
+                    </span>
                   </div>
                   <h2 class="mb-1 sm:mb-2">{{ project.title }}</h2>
-                  <p class="text-neutral-600 mb-3 sm:mb-4 text-sm">{{ project.description }}</p>
+                  <p class="text-neutral-600 mb-3 sm:mb-4 text-sm">{{ project.short_description || project.description }}</p>
                 </div>
 
                 <div class="grid grid-cols-2 gap-3 sm:gap-4 mb-4 sm:mb-6 pb-4 sm:pb-6 border-b">

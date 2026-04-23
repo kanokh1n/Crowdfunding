@@ -108,27 +108,28 @@ type ProjectImage struct {
 }
 
 type Project struct {
-	ID            uint               `gorm:"primaryKey"                   json:"id"`
-	UserID        uint               `gorm:"not null"                     json:"user_id"`
-	User          User               `gorm:"foreignKey:UserID"            json:"user,omitempty"`
-	Title         string             `gorm:"not null"                     json:"title"`
-	Description   string             `                                    json:"description"`
-	GoalAmount    float64            `gorm:"type:decimal(10,2);not null"  json:"goal_amount"`
-	CurrentAmount float64            `gorm:"type:decimal(10,2);default:0" json:"current_amount"`
-	ProjectImg    string             `                                    json:"project_img"`
-	RoadmapFile   string             `                                    json:"roadmap_file"`
-	LinkTelegram  string             `                                    json:"link_telegram"`
-	LinkGithub    string             `                                    json:"link_github"`
-	LinkLinkedin  string             `                                    json:"link_linkedin"`
-	Status        ProjectStatus      `gorm:"default:'pending_ai'"         json:"status"`
-	Images        []ProjectImage     `gorm:"foreignKey:ProjectID;constraint:OnDelete:CASCADE" json:"images,omitempty"`
-	Moderation    *ProjectModeration `gorm:"foreignKey:ProjectID"     json:"moderation,omitempty"`
-	EndDate       *time.Time         `                                    json:"end_date"`
-	Categories    []Category         `gorm:"many2many:project_categories" json:"categories,omitempty"`
-	LikesCount    int64              `gorm:"-"                            json:"likes_count"`
-	CreatedAt     time.Time          `                                    json:"created_at"`
-	UpdatedAt     time.Time          `                                    json:"updated_at"`
-	DeletedAt     gorm.DeletedAt     `gorm:"index"                        json:"-"`
+	ID               uint               `gorm:"primaryKey"                   json:"id"`
+	UserID           uint               `gorm:"not null"                     json:"user_id"`
+	User             User               `gorm:"foreignKey:UserID"            json:"user,omitempty"`
+	Title            string             `gorm:"not null"                     json:"title"`
+	ShortDescription string             `                                    json:"short_description"`
+	Description      string             `                                    json:"description"`
+	GoalAmount       float64            `gorm:"type:decimal(10,2);not null"  json:"goal_amount"`
+	CurrentAmount    float64            `gorm:"type:decimal(10,2);default:0" json:"current_amount"`
+	ProjectImg       string             `                                    json:"project_img"`
+	RoadmapFile      string             `                                    json:"roadmap_file"`
+	LinkTelegram     string             `                                    json:"link_telegram"`
+	LinkGithub       string             `                                    json:"link_github"`
+	LinkLinkedin     string             `                                    json:"link_linkedin"`
+	Status           ProjectStatus      `gorm:"default:'pending_ai'"         json:"status"`
+	Images           []ProjectImage     `gorm:"foreignKey:ProjectID;constraint:OnDelete:CASCADE" json:"images,omitempty"`
+	Moderation       *ProjectModeration `gorm:"foreignKey:ProjectID"     json:"moderation,omitempty"`
+	EndDate          *time.Time         `                                    json:"end_date"`
+	Categories       []Category         `gorm:"many2many:project_categories" json:"categories,omitempty"`
+	LikesCount       int64              `gorm:"-"                            json:"likes_count"`
+	CreatedAt        time.Time          `                                    json:"created_at"`
+	UpdatedAt        time.Time          `                                    json:"updated_at"`
+	DeletedAt        gorm.DeletedAt     `gorm:"index"                        json:"-"`
 }
 
 // ─── Pledge ───────────────────────────────────────────────────────────────────
